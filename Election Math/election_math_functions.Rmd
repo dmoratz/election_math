@@ -1,0 +1,324 @@
+---
+title: "election_math_analysis"
+author: "Donald Moratz"
+date: "2025-09-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+rm(list = ls())
+library(pacman)
+p_load(tidyverse, foreign, haven, ggplot2, broom, plyr, dplyr, DataCombine, plm, estimatr, gsynth, reshape2, zoo, stargazer, did, here, etwfe, modelsummary, interflex, sandwich, multcomp, lmtest, kableExtra, texreg, fastDummies, ggdag, AER, MatchIt, cobalt, MCMCpack,coda,stats, tidyr, cowplot, blocs)
+
+set.seed(3184)
+
+```
+
+
+```{r}
+# Vote totals
+vote_dem_2016 <- 65853514
+vote_rep_2016 <- 62984828
+vote_total_2016 <- vote_dem_2016 + vote_rep_2016
+vote_dem_2020 <- 81283501
+vote_rep_2020 <- 74223975
+vote_total_2020 <- vote_dem_2020 + vote_rep_2020
+#vote_total_2024 <- 
+```
+
+
+# Grimmer Data
+
+```{r, warning = F, message = F}
+data<-anes
+
+vbdf_data <- vbdf(data, bloc_var = "race")
+
+vbdf_data_recent <- vbdf_data %>%
+  filter(year > 2008)
+
+# 2016 data
+
+data_2016 <- vb_discrete(vbdf_data[which(vbdf_data_recent$year %in% "2016"),], indep = "race", dv_turnout = "voted", dv_vote3 = "vote_pres3", boot_iters = 100, weight = "weight") %>%
+  group_by(race) %>%
+  summarise(mean_prob = mean(prob),
+            mean_turnout = mean(pr_turnout),
+            mean_rep = mean(pr_voterep),
+            mean_dem = mean(pr_votedem))
+
+# 2020 data
+
+data_2020 <- vb_discrete(vbdf_data[which(vbdf_data_recent$year %in% "2020"),], indep = "race", dv_turnout = "voted", dv_vote3 = "vote_pres3", boot_iters = 100, weight = "weight") %>%
+  group_by(race) %>%
+  summarise(mean_prob = mean(prob),
+            mean_turnout = mean(pr_turnout),
+            mean_rep = mean(pr_voterep),
+            mean_dem = mean(pr_votedem))
+
+# Reassign NA as Unknown
+data_2020$race <- factor(data_2020$race, levels = levels(addNA(data_2020$race)), labels = c(levels(data_2020$race), "unknown"), exclude = NULL)
+data_2016$race <- factor(data_2016$race, levels = levels(addNA(data_2016$race)), labels = c(levels(data_2016$race), "unknown"), exclude = NULL)
+```
+
+# Pew Data
+
+```{r}
+# Read Pew Data
+pew_2022 <- read.csv("pew_2022_clean.csv")
+
+# Extract 2016
+pew_2016 <- data.frame(pew_2022[7:11,c("X", 
+                                       "X2016.Clinton.vote..official.result.48..", 
+                                       "X2016.Trump.vote..official.result.46..", 
+                                       "Group.as.a.share.of.all.2016.voters")])
+colnames(pew_2016) <- c("race","unweighted_dem","unweighted_rep","pr_x_turnout")
+pew_2016$race <- c("white","black","hispanic","asian","other")
+
+# Impute Asian and Other
+pew_2016_share_trump <- pew_2022[10:11,"Group.as.a.share.of.2016.Trump.voters"]
+
+# Weighted mix
+weights <- pew_2016$pr_x_turnout[4:5] / sum(pew_2016$pr_x_turnout)
+
+# Imputed Rates are the share for trump divided by 
+# the weights*vote total/republican votes
+pew_2016$unweighted_rep[4:5] <- (pew_2016_share_trump/
+                                   (weights*vote_total_2016/vote_rep_2016))
+pew_2016$unweighted_dem[4:5] <- 100 - as.numeric(pew_2016$unweighted_rep[4:5])
+
+# Convert to percentages
+pew_2016$unweighted_dem <- as.numeric(pew_2016$unweighted_dem)/100
+pew_2016$unweighted_rep <- as.numeric(pew_2016$unweighted_rep)/100
+pew_2016$pr_x_turnout <- as.numeric(pew_2016$pr_x_turnout)/100
+
+# Normalize vote shares to be 1 (accounts for independent candidates)
+pew_2016$mean_dem <- (1/
+                        (pew_2016$unweighted_dem+pew_2016$unweighted_rep)
+                      )*pew_2016$unweighted_dem
+pew_2016$mean_rep <- (1/
+                        (pew_2016$unweighted_dem+pew_2016$unweighted_rep)
+                      )*pew_2016$unweighted_rep
+
+# extract 2020
+pew_2020 <- data.frame(pew_2022[7:11,c("X", 
+                                       "X2020.Biden.vote..official.result.51..", 
+                                       "X2020.Trump.vote..official.result.47..", 
+                                       "Group.as.a.share.of.all.2020.voters")])
+colnames(pew_2020) <- c("race","unweighted_dem","unweighted_rep","pr_x_turnout")
+pew_2020$race <- c("white","black","hispanic","asian","other")
+
+# Convert to percentages
+pew_2020$unweighted_dem <- as.numeric(pew_2020$unweighted_dem)/100
+pew_2020$unweighted_rep <- as.numeric(pew_2020$unweighted_rep)/100
+pew_2020$pr_x_turnout <- as.numeric(pew_2020$pr_x_turnout)/100
+
+# Normalize vote shares to be 1 (accounts for independent candidates)
+pew_2020$mean_dem <- (1/
+                        (pew_2020$unweighted_dem+pew_2020$unweighted_rep)
+                      )*pew_2020$unweighted_dem
+pew_2020$mean_rep <- (1/
+                        (pew_2020$unweighted_dem+pew_2020$unweighted_rep)
+                      )*pew_2020$unweighted_rep
+
+
+```
+
+
+# Functions
+
+Vote Totals by group
+
+```{r}
+# Create a function that generates vote totals by racial group
+generate_vote_columns <- function(data, vote_total) {
+  # Calculate new columns using mutate()
+  # The `.data` pronoun is used to avoid issues if the function is called
+  # with a data frame that has the same column names as variables in the environment.
+  if("pr_x_turnout" %in% names(data)){
+    data <- data %>%
+      mutate(
+        weighted = pr_x_turnout / sum(.data$pr_x_turnout),
+        draw = weighted*vote_total
+      )
+  } else{
+    data <- data %>%
+    mutate(
+      pr_x_turnout = .data$mean_prob * .data$mean_turnout,
+      weighted = pr_x_turnout / sum(.data$pr_x_turnout),
+      draw = weighted*vote_total
+    )
+  }
+  
+  
+  return(data)
+}
+
+# Apply to grimmer data
+data_2016_updated <- generate_vote_columns(data_2016, vote_total_2016)
+data_2020_updated <- generate_vote_columns(data_2020, vote_total_2020)
+
+# Apply to Pew Data
+pew_2016_updated <- generate_vote_columns(pew_2016, vote_total_2016)
+pew_2020_updated <- generate_vote_columns(pew_2020, vote_total_2020)
+```
+
+Margin and Mix Table
+
+```{r}
+create_margin_mix_table <- function(data) {
+  # Calculate new columns and return a new data frame
+  data %>%
+    transmute(
+      Race = .data$race,
+      Dem = round(.data$draw * .data$mean_dem,0),
+      Repub = .data$draw - .data$Dem,
+      Total = .data$Dem + .data$Repub,
+      Gross_Margin = .data$Dem - .data$Repub,
+      Trad_Mar = .data$Gross_Margin / .data$Total,
+      Trad_Mix = .data$Total / sum(.data$Total)
+    )
+}
+
+# Apply to grimmer data
+margin_mix_2016 <- create_margin_mix_table(data_2016_updated)
+margin_mix_2020 <- create_margin_mix_table(data_2020_updated)
+
+# Apply to Pew data
+pew_margin_2016 <- create_margin_mix_table(pew_2016_updated)
+pew_margin_2020 <- create_margin_mix_table(pew_2020_updated)
+```
+
+Derivative Calculation for Rate, Composition and Volume
+
+```{r}
+derivative_analysis <- function(data1, data2) {
+  # Calculate B/W (Dem vs Repub across 2 years) Table ---
+  # This part directly calculates the differences between the 2nd election and 
+  # the first election data.
+  b_w_df <- data2 %>%
+    select(Race, Dem, Repub, Total, Gross_Margin, Trad_Mar, Trad_Mix) %>%
+    mutate(
+      Dem = Dem - data1$Dem,
+      Repub = Repub - data1$Repub,
+      Total = Total - data1$Total,
+      Gross_Margin = Gross_Margin - data1$Gross_Margin,
+      Trad_Mar = Trad_Mar - data1$Trad_Mar,
+      Trad_Mix = Trad_Mix - data1$Trad_Mix
+    )
+  
+  # The following calculations are done on a row-by-row basis (by race)
+  # The `get_total_sum()` function pulls the total from the data frame.
+  
+  final_df <- b_w_df %>%
+    mutate(
+      # The formulas are interpreted based on standard variance analysis.
+      # Rate Variance: 
+      # Change in `Trad_Mar` * Total from 1st election * `Trad_Mix` from 1st election
+      Rate = (data2$Trad_Mar - data1$Trad_Mar) * sum(data1$Total) * data1$Trad_Mix,
+      
+      # Mix Variance: Change in `Trad_Mix` * Total from 1st election * `Trad_Mar` from 1st election
+      Mix = (data2$Trad_Mix - data1$Trad_Mix) * sum(data1$Total) * data1$Trad_Mar,
+      
+      # Volume Variance: Change in `Total` * `Trad_Mar` from 1st election * `Trad_Mix` from 1st election
+      Volume = (sum(data2$Total) - sum(data1$Total)) * data1$Trad_Mar * data1$Trad_Mix,
+      
+      # The total of the three variances should equal the change in Gross Margin.
+      # This is your `Calc Mar Chng` column.
+      Calc_Mar_Chng = Rate + Mix + Volume,
+      
+      # `Var to Act` (Variance to Actual) is the difference between the
+      # change in Gross Margin and the calculated change.
+      Var_to_Act = b_w_df$Gross_Margin - Calc_Mar_Chng,
+      
+      # `Variance %`
+      Variance_pct = Var_to_Act / b_w_df$Gross_Margin
+    ) %>%
+    # select only the outcome columns
+    select(Race, Rate, Mix, Volume, Calc_Mar_Chng, Var_to_Act, Variance_pct)
+  
+  # Return the final table, which includes all the calculated components.
+  return(final_df)
+}
+
+# Apply to Grimmer Data
+derivative_grimmer_data <- derivative_analysis(margin_mix_2016, margin_mix_2020)
+
+# Apply to Pew Data
+derivative_pew_data <- derivative_analysis(pew_margin_2016, pew_margin_2020)
+
+```
+
+RCV Decomposition
+
+```{r}
+rcv_analysis <- function(data1, data2) {
+  # Calculate B/W (Dem vs Repub across 2 years) Table ---
+  # This part directly calculates the differences between the 2nd election and 
+  # the first election data.
+  b_w_df <<- data2 %>%
+    select(Race, Dem, Repub, Total, Gross_Margin, Trad_Mar, Trad_Mix) %>%
+    mutate(
+      Dem = Dem - data1$Dem,
+      Repub = Repub - data1$Repub,
+      Total = Total - data1$Total,
+      Gross_Margin = Gross_Margin - data1$Gross_Margin,
+      Trad_Mar = Trad_Mar - data1$Trad_Mar,
+      Trad_Mix = Trad_Mix - data1$Trad_Mix
+    )
+  
+  # The following calculations are done on a row-by-row basis (by race)
+  # The `get_total_sum()` function pulls the total from the data frame.
+  
+  final_df <- b_w_df %>%
+    mutate(
+      # The formulas are interpreted based on standard variance analysis.
+      # Rate Variance: 
+      # Change in `Trad_Mar` * Total from 1st election * `Trad_Mix` from 1st election
+      Rate = (data2$Trad_Mar - data1$Trad_Mar) * sum(data1$Total) * data1$Trad_Mix,
+      
+      # Mix Variance: Change in `Trad_Mix` * Total from 1st election * `Trad_Mar` from 1st election
+      Mix = (data2$Trad_Mix - data1$Trad_Mix) * sum(data1$Total) * data2$Trad_Mar,
+      
+      # Volume Variance: Change in `Total` * `Trad_Mar` from 1st election * `Trad_Mix` from 1st election
+      Volume = (sum(data2$Total) - sum(data1$Total)) * data2$Trad_Mar * data2$Trad_Mix,
+      
+      # The total of the three variances should equal the change in Gross Margin.
+      # This is your `Calc Mar Chng` column.
+      Calc_Mar_Chng = Rate + Mix + Volume,
+      
+      # `Var to Act` (Variance to Actual) is the difference between the
+      # change in Gross Margin and the calculated change.
+      Var_to_Act = b_w_df$Gross_Margin - Calc_Mar_Chng,10,
+      
+      # `Variance %`
+      Variance_pct = Var_to_Act / b_w_df$Gross_Margin
+    ) %>%
+    # select only the outcome columns
+    select(Race, Rate, Mix, Volume, Calc_Mar_Chng, Var_to_Act, Variance_pct)
+  
+  # Return the final table, which includes all the calculated components.
+  return(final_df)
+}
+
+# Apply to Grimmer Data
+rcv_grimmer_data <- rcv_analysis(margin_mix_2016, margin_mix_2020)
+
+# Apply to Pew Data
+rcv_pew_data <- rcv_analysis(pew_margin_2016, pew_margin_2020)
+
+```
+
+# Data write out
+
+```{r}
+# Data to write
+data_to_write <- list(derivative_grimmer_data = derivative_grimmer_data, 
+                      rcv_grimmer_data = rcv_grimmer_data,
+                      derivative_pew_data = derivative_pew_data,
+                      rcv_pew_data = rcv_pew_data)
+
+saveRDS(data_to_write, "election_analysis.rds")
+```
+
