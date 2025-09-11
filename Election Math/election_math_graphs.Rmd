@@ -19,8 +19,9 @@ set.seed(3184)
 election_analysis_data <- readRDS("election_analysis.rds")
 derivative_grimmer <- election_analysis_data$derivative_grimmer_data
 rcv_grimmer <- election_analysis_data$rcv_grimmer_data
-rcv_pew_2020 <- election_analysis_data$rcv_pew_data_2020
-rcv_pew_2024 <- election_analysis_data$rcv_pew_data_2024
+rcv_pew_16v20 <- election_analysis_data$rcv_pew_data_16v20
+rcv_pew_20v24 <- election_analysis_data$rcv_pew_data_20v24
+rcv_pew_16v24 <- election_analysis_data$rcv_pew_data_16v24
 derivative_pew <- election_analysis_data$derivative_pew_data
 
 # Vote totals
@@ -37,7 +38,8 @@ vote_dem_2024 <- 75017613
 vote_rep_2024 <- 77302580
 vote_total_2024 <- vote_dem_2024 + vote_rep_2024
 vote_margin_2024 <- vote_dem_2024-vote_rep_2024
-vote_margin_diff_2024 <- vote_margin_2024 - vote_margin_2024
+vote_margin_diff_2024 <- vote_margin_2024 - vote_margin_2020
+vote_margin_diff_1624 <- vote_margin_2024 - vote_margin_2016
 
 ```
 
@@ -261,10 +263,10 @@ data_hispanic <- data.frame(
                          "ANES", "PEW",
                          "ANES", "PEW",
                          "ANES", "PEW"),
-  Value = c(rcv_grimmer$Rate[2], rcv_pew_2020$Rate[3],    # Rate
-            rcv_grimmer$Mix[2], rcv_pew_2020$Mix[3],    # Composition
-            rcv_grimmer$Volume[2], rcv_pew_2020$Volume[3],    # Volume
-            (sum(rcv_grimmer$Calc_Mar_Chng)-vote_margin_diff_1620), (sum(rcv_pew_2020$Calc_Mar_Chng)-vote_margin_diff_1620))     # Residual
+  Value = c(rcv_grimmer$Rate[2], rcv_pew_16v20$Rate[3],    # Rate
+            rcv_grimmer$Mix[2], rcv_pew_16v20$Mix[3],    # Composition
+            rcv_grimmer$Volume[2], rcv_pew_16v20$Volume[3],    # Volume
+            (sum(rcv_grimmer$Calc_Mar_Chng)-vote_margin_diff_1620), (sum(rcv_pew_16v20$Calc_Mar_Chng)-vote_margin_diff_1620))     # Residual
 )
 
 # Ensure Demographic is a factor with the desired order
@@ -346,12 +348,101 @@ plot_grid(p_main, p_residual, ncol = 1, rel_heights = c(0.7, 0.3), align = "v")
 ggsave("hispanic_votes_chart.png", width = 10, height = 6, dpi = 300)
 ```
 
-# Analysis of 2024 Data
+# Analysis of 2020 Pew Data
+
+```{r}
+# Use the Pew 2020 Data
+# Calculate the 'Total Change' for Traditional and RCV based on components
+data_components_2020 <- rcv_pew_16v20 %>%
+  rename(Composition = Mix,
+         Residual = Var_to_Act,
+         Demographic = Race) %>%
+  rowwise() %>%
+  mutate(Calculated_Total = sum(Rate, Composition, Volume)) %>%
+  ungroup() %>%
+  mutate(Demographic = str_to_sentence(Demographic))
+  
+
+# Calculate total components across all demographics for Traditional and RCV
+total_components_2020 <- data_components_2020 %>%
+  summarise(
+    Rate = sum(Rate),
+    Composition = sum(Composition),
+    Volume = sum(Volume),
+    #Residual = sum(Residual)
+  ) %>%
+  mutate(Demographic = "Total") %>%
+  ungroup()
+
+# Bind this to the original data_components
+data_components_with_total_2020 <- bind_rows(data_components_2020, total_components_2020)
+
+# Reshape the components data for stacking
+data_long_2020 <- data_components_with_total_2020 %>% 
+  pivot_longer(
+    cols = c(Rate, Composition, Volume),
+    names_to = "Component",
+    values_to = "Value"
+  ) %>%
+  # Add a 'Type' column to distinguish between 'Component'
+  mutate(Type = "Component")
+
+# Combine the data - only using the 'data_long' for components
+final_data_2020 <- data_long_2020 %>%
+  # Order the Component for stacking (bottom to top)
+  mutate(Component = factor(Component,
+                            levels = c("Volume", "Composition", "Rate"))) %>%
+  # Order the Demographic groups, including "Total" at the end
+  mutate(Demographic = factor(Demographic,
+                              levels = c("Black", "Hispanic", "Asian", "White", "Other", "Total")))
+```
+
+```{r}
+# Create the new stacked bar chart without facets
+ggplot(final_data_2020, aes(x = Demographic, y = Value, fill = Component)) +
+  geom_bar(stat = "identity", position = "stack", width = 0.7) +
+  scale_fill_manual(
+    values = c(
+      "Rate" = "blue",        # blue
+      "Composition" = "forestgreen", # green
+      "Volume" = "orange"    # orange
+    ),
+    breaks = c("Rate", "Composition", "Volume", "Residual") # Ensure order in legend
+  ) +
+  labs(
+    title = "RCVD Vote Change Decomposition (2016 to 2020)",
+    subtitle = "Components of Change by Demographic Group",
+    x = "Demographic Group",
+    y = "Vote Change"
+  ) +
+  scale_y_continuous(labels = scales::comma) + # Format y-axis labels with commas
+  theme_bw() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5, size = 14),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10), # Rotated 45 degrees, right-justified
+    axis.text.y = element_text(size = 10),
+    axis.title.y = element_text(size = 12, margin = margin(r = 10)), # Add margin to y-axis title
+    legend.position = "right",
+    legend.title = element_text(size = 12, face = "bold"),
+    legend.text = element_text(size = 10),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_line(color = "grey", linetype = "dashed"),
+    panel.grid.minor.y = element_blank()
+  )
+
+# To save the plot (optional)
+ggsave("rcv_stacked_bar_chart_2020.png", width = 8, height = 7, dpi = 300)
+```
+
+
+# Analysis of 2024 Pew Data
 
 ```{r}
 # Use the Pew 2024 Data
 # Calculate the 'Total Change' for Traditional and RCV based on components
-data_components_2024 <- rcv_pew_2024 %>%
+data_components_2024 <- rcv_pew_20v24 %>%
   rename(Composition = Mix,
          Residual = Var_to_Act,
          Demographic = Race) %>%
@@ -431,8 +522,9 @@ ggplot(final_data_2024, aes(x = Demographic, y = Value, fill = Component)) +
   )
 
 # To save the plot (optional)
-ggsave("rcv_stacked_bar_chart.png", width = 8, height = 7, dpi = 300)
+ggsave("rcv_stacked_bar_chart_2024.png", width = 8, height = 7, dpi = 300)
 ```
+
 
 ```{r}
 # Function for a clean table
@@ -445,6 +537,94 @@ display_clean <- function(df) {
   return(kable(formatted_df))
 }
 
-print(display_clean(rcv_pew_2024))
+print(display_clean(rcv_pew_20v24))
 ```
 
+
+# Analysis of 2024 vs 2016 Pew Data
+
+```{r}
+# Use the Pew 2024 Data
+# Calculate the 'Total Change' for Traditional and RCV based on components
+data_components_1624 <- rcv_pew_16v24 %>%
+  rename(Composition = Mix,
+         Residual = Var_to_Act,
+         Demographic = Race) %>%
+  rowwise() %>%
+  mutate(Calculated_Total = sum(Rate, Composition, Volume)) %>%
+  ungroup() %>%
+  mutate(Demographic = str_to_sentence(Demographic))
+  
+
+# Calculate total components across all demographics for Traditional and RCV
+total_components_1624 <- data_components_1624 %>%
+  summarise(
+    Rate = sum(Rate),
+    Composition = sum(Composition),
+    Volume = sum(Volume),
+    #Residual = sum(Residual)
+  ) %>%
+  mutate(Demographic = "Total") %>%
+  ungroup()
+
+# Bind this to the original data_components
+data_components_with_total_1624 <- bind_rows(data_components_1624, total_components_1624)
+
+# Reshape the components data for stacking
+data_long_1624 <- data_components_with_total_1624 %>% 
+  pivot_longer(
+    cols = c(Rate, Composition, Volume),
+    names_to = "Component",
+    values_to = "Value"
+  ) %>%
+  # Add a 'Type' column to distinguish between 'Component'
+  mutate(Type = "Component")
+
+# Combine the data - only using the 'data_long' for components
+final_data_1624 <- data_long_1624 %>%
+  # Order the Component for stacking (bottom to top)
+  mutate(Component = factor(Component,
+                            levels = c("Volume", "Composition", "Rate"))) %>%
+  # Order the Demographic groups, including "Total" at the end
+  mutate(Demographic = factor(Demographic,
+                              levels = c("Black", "Hispanic", "Asian", "White", "Other", "Total")))
+```
+
+```{r}
+# Create the new stacked bar chart without facets
+ggplot(final_data_1624, aes(x = Demographic, y = Value, fill = Component)) +
+  geom_bar(stat = "identity", position = "stack", width = 0.7) +
+  scale_fill_manual(
+    values = c(
+      "Rate" = "blue",        # blue
+      "Composition" = "forestgreen", # green
+      "Volume" = "orange"    # orange
+    ),
+    breaks = c("Rate", "Composition", "Volume", "Residual") # Ensure order in legend
+  ) +
+  labs(
+    title = "RCVD Vote Change Decomposition (2016 to 2024)",
+    subtitle = "Components of Change by Demographic Group",
+    x = "Demographic Group",
+    y = "Vote Change"
+  ) +
+  scale_y_continuous(labels = scales::comma) + # Format y-axis labels with commas
+  theme_bw() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5, size = 14),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10), # Rotated 45 degrees, right-justified
+    axis.text.y = element_text(size = 10),
+    axis.title.y = element_text(size = 12, margin = margin(r = 10)), # Add margin to y-axis title
+    legend.position = "right",
+    legend.title = element_text(size = 12, face = "bold"),
+    legend.text = element_text(size = 10),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_line(color = "grey", linetype = "dashed"),
+    panel.grid.minor.y = element_blank()
+  )
+
+# To save the plot (optional)
+ggsave("rcv_stacked_bar_chart_1624.png", width = 8, height = 7, dpi = 300)
+```

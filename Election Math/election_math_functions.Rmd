@@ -334,10 +334,13 @@ rcv_analysis <- function(data1, data2) {
 rcv_grimmer_data <- rcv_analysis(margin_mix_2016, margin_mix_2020)
 
 # Apply to 2020 vs 2016 Pew Data
-rcv_pew_data_2020 <- rcv_analysis(pew_margin_2016, pew_margin_2020)
+rcv_pew_data_16v20 <- rcv_analysis(pew_margin_2016, pew_margin_2020)
 
 # Apply to 2024 vs 2020 Pew Data
-rcv_pew_data_2024 <- rcv_analysis(pew_margin_2020, pew_margin_2024)
+rcv_pew_data_20v24 <- rcv_analysis(pew_margin_2020, pew_margin_2024)
+
+# Apply to 2024 vs 2016 Pew Data
+rcv_pew_data_16v24 <- rcv_analysis(pew_margin_2016, pew_margin_2024)
 ```
 
 # Data write out
@@ -347,8 +350,9 @@ rcv_pew_data_2024 <- rcv_analysis(pew_margin_2020, pew_margin_2024)
 data_to_write <- list(derivative_grimmer_data = derivative_grimmer_data, 
                       rcv_grimmer_data = rcv_grimmer_data,
                       derivative_pew_data = derivative_pew_data,
-                      rcv_pew_data_2020 = rcv_pew_data_2020,
-                      rcv_pew_data_2024 = rcv_pew_data_2024)
+                      rcv_pew_data_16v20 = rcv_pew_data_16v20,
+                      rcv_pew_data_20v24 = rcv_pew_data_20v24,
+                      rcv_pew_data_16v24 = rcv_pew_data_16v24)
 
 saveRDS(data_to_write, "election_analysis.rds")
 ```
