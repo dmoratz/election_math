@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 
 rm(list = ls())
 library(pacman)
-p_load(tidyverse, foreign, haven, ggplot2, broom, plyr, dplyr, DataCombine, plm, estimatr, gsynth, reshape2, zoo, stargazer, did, here, etwfe, modelsummary, interflex, sandwich, multcomp, lmtest, kableExtra, texreg, fastDummies, ggdag, AER, MatchIt, cobalt, MCMCpack,coda,stats, tidyr, cowplot, blocs)
+p_load(MCMCpack, foreign, haven, ggplot2, broom, DataCombine, plm, estimatr, gsynth, reshape2, zoo, stargazer, did, here, etwfe, modelsummary, interflex, sandwich, multcomp, lmtest, kableExtra, texreg, fastDummies, ggdag, AER, MatchIt, cobalt, coda,stats, tidyr, cowplot, blocs, dplyr)
 
 set.seed(3184)
 
@@ -41,7 +41,7 @@ vbdf_data_recent <- vbdf_data %>%
 
 # 2016 data
 
-data_2016 <- vb_discrete(vbdf_data[which(vbdf_data_recent$year %in% "2016"),], indep = "race", dv_turnout = "voted", dv_vote3 = "vote_pres3", boot_iters = 100, weight = "weight") %>%
+data_2016 <- vb_discrete(vbdf_data_recent[which(vbdf_data_recent$year %in% "2016"),], indep = "race", dv_turnout = "voted", dv_vote3 = "vote_pres3", boot_iters = 100, weight = "weight") %>%
   group_by(race) %>%
   summarise(mean_prob = mean(prob),
             mean_turnout = mean(pr_turnout),
@@ -50,7 +50,7 @@ data_2016 <- vb_discrete(vbdf_data[which(vbdf_data_recent$year %in% "2016"),], i
 
 # 2020 data
 
-data_2020 <- vb_discrete(vbdf_data[which(vbdf_data_recent$year %in% "2020"),], indep = "race", dv_turnout = "voted", dv_vote3 = "vote_pres3", boot_iters = 100, weight = "weight") %>%
+data_2020 <- vb_discrete(vbdf_data_recent[which(vbdf_data_recent$year %in% "2020"),], indep = "race", dv_turnout = "voted", dv_vote3 = "vote_pres3", boot_iters = 100, weight = "weight") %>%
   group_by(race) %>%
   summarise(mean_prob = mean(prob),
             mean_turnout = mean(pr_turnout),

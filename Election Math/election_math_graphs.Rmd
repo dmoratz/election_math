@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 rm(list = ls())
 library(pacman)
-p_load(foreign, haven, ggplot2, broom, plyr, dplyr, DataCombine, plm, estimatr, gsynth, reshape2, zoo, stargazer, did, here, etwfe, modelsummary, interflex, sandwich, multcomp, lmtest, kableExtra, texreg, fastDummies, ggdag, AER, MatchIt, cobalt, MCMCpack,coda,stats, tidyr, cowplot)
+p_load(foreign, haven, ggplot2, broom, dplyr, DataCombine, plm, estimatr, gsynth, reshape2, zoo, stargazer, did, here, etwfe, modelsummary, interflex, sandwich, multcomp, lmtest, kableExtra, texreg, fastDummies, ggdag, AER, MatchIt, cobalt, MCMCpack,coda,stats, tidyr, cowplot)
 
 set.seed(3184)
 
