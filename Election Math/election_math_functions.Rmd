@@ -30,6 +30,17 @@ vote_rep_2024 <- 77302580
 vote_total_2024 <- vote_dem_2024 + vote_rep_2024
 ```
 
+# Simulated Data
+
+```{r}
+# Load margin and mix tables for simulated data
+
+# 2x2 table
+simple_2016 <- read.csv("simulated_2016_simple.csv")
+simple_2020 <- read.csv("simulated_2020_simple.csv")
+
+```
+
 
 # Grimmer Data
 
@@ -218,6 +229,35 @@ pew_margin_2020 <- create_margin_mix_table(pew_2020_updated)
 pew_margin_2024 <- create_margin_mix_table(pew_2024_updated)
 ```
 
+Simulate Data for 2020
+
+```{r}
+# Only rate Changes
+# create new 2020 rates, lowers rate of dem votes by 10%
+data_2020_rate_only <- data_2020_updated
+data_2020_rate_only$mean_dem <- data_2020_rate_only$mean_dem*.9
+margin_mix_2020_rate_only <- create_margin_mix_table(data_2020_rate_only)
+
+# Only mix Changes
+# create new 2020 mix, shifts all non-white down 56%, into white voters
+data_2020_mix_only <- data_2020_updated
+data_2020_mix_only$draw <- data_2020_updated$draw*.44
+data_2020_mix_only[4,"draw"] <- sum(data_2020_updated$draw)-sum(data_2020_mix_only[c(1:3,5),"draw"])
+margin_mix_2020_mix_only <- create_margin_mix_table(data_2020_mix_only)
+
+# Both mix and rate changes
+# creates new 2020 results, shifts all non-white voters down 20%,
+# lowers rate of dem votes by 7%
+data_2020_rate_mix <- data_2020_updated
+data_2020_rate_mix$mean_dem <- data_2020_rate_mix$mean_dem*.93
+data_2020_rate_mix$draw <- data_2020_updated$draw*.8
+data_2020_rate_mix[4,"draw"] <- sum(data_2020_updated$draw)-sum(data_2020_rate_mix[c(1:3,5),"draw"])
+margin_mix_2020_rate_mix <- create_margin_mix_table(data_2020_rate_mix)
+
+
+```
+
+
 Derivative Calculation for Rate, Composition and Volume
 
 ```{r}
@@ -275,6 +315,12 @@ derivative_grimmer_data <- derivative_analysis(margin_mix_2016, margin_mix_2020)
 
 # Apply to Pew Data
 derivative_pew_data <- derivative_analysis(pew_margin_2016, pew_margin_2020)
+
+# Apply to simulated data
+derivative_simple_sim <- derivative_analysis(simple_2016, simple_2020)
+derivative_rate_only <- derivative_analysis(margin_mix_2020, margin_mix_2020_rate_only)
+derivative_mix_only <- derivative_analysis(margin_mix_2020, margin_mix_2020_mix_only)
+derivative_rate_mix <- derivative_analysis(margin_mix_2020, margin_mix_2020_rate_mix)
 
 ```
 
@@ -341,6 +387,13 @@ rcv_pew_data_20v24 <- rcv_analysis(pew_margin_2020, pew_margin_2024)
 
 # Apply to 2024 vs 2016 Pew Data
 rcv_pew_data_16v24 <- rcv_analysis(pew_margin_2016, pew_margin_2024)
+
+# Apply to simulated data
+rcv_simple_sim <- rcv_analysis(simple_2016, simple_2020)
+rcv_rate_only <- rcv_analysis(margin_mix_2020, margin_mix_2020_rate_only)
+rcv_mix_only <- rcv_analysis(margin_mix_2020, margin_mix_2020_mix_only)
+rcv_rate_mix <- rcv_analysis(margin_mix_2020, margin_mix_2020_rate_mix)
+
 ```
 
 # Data write out
@@ -350,9 +403,17 @@ rcv_pew_data_16v24 <- rcv_analysis(pew_margin_2016, pew_margin_2024)
 data_to_write <- list(derivative_grimmer_data = derivative_grimmer_data, 
                       rcv_grimmer_data = rcv_grimmer_data,
                       derivative_pew_data = derivative_pew_data,
+                      derivative_simple_sim = derivative_simple_sim,
+                      derivative_rate_only = derivative_rate_only,
+                      derivative_mix_only = derivative_mix_only,
+                      derivative_rate_mix = derivative_rate_mix,
                       rcv_pew_data_16v20 = rcv_pew_data_16v20,
                       rcv_pew_data_20v24 = rcv_pew_data_20v24,
-                      rcv_pew_data_16v24 = rcv_pew_data_16v24)
+                      rcv_pew_data_16v24 = rcv_pew_data_16v24,
+                      rcv_simple_sim = rcv_simple_sim,
+                      rcv_rate_only = rcv_rate_only,
+                      rcv_mix_only = rcv_mix_only,
+                      rcv_rate_mix = rcv_rate_mix)
 
 saveRDS(data_to_write, "election_analysis.rds")
 ```
