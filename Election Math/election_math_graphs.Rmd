@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 rm(list = ls())
 library(pacman)
-p_load(foreign, haven, ggplot2, broom, DataCombine, plm, estimatr, gsynth, reshape2, zoo, stargazer, here, modelsummary, interflex, sandwich, multcomp, lmtest, kableExtra, texreg, fastDummies, ggdag, AER ,stats, tidyr, cowplot, stringr, knitr, scales, dplyr)
+p_load(foreign, haven, ggplot2, broom, DataCombine, plm, estimatr, gsynth, reshape2, zoo, stargazer, here, modelsummary, interflex, sandwich, multcomp, lmtest, kableExtra, texreg, fastDummies, ggdag, AER ,stats, tidyr, cowplot, stringr, knitr, scales, dplyr, viridis)
 
 options(scipen = 999)
 
@@ -42,6 +42,12 @@ vote_margin_diff_2024 <- vote_margin_2024 - vote_margin_2020
 vote_margin_diff_1624 <- vote_margin_2024 - vote_margin_2016
 
 ```
+
+```{r}
+# create colors for consistent usage
+colors = viridis(6, option = "turbo")
+```
+
 
 # Impact of Mix
 
@@ -75,7 +81,7 @@ data$Demographic <- factor(data$Demographic,
 # 2. Create the grouped bar chart using ggplot2
 ggplot(data, aes(x = Demographic, y = Value, fill = Calculation_Method)) +
   geom_bar(stat = "identity", position = position_dodge(width = 0.75), width = 0.7) +
-  scale_fill_manual(values = c("RCVD" = "steelblue", "Traditional" = "chocolate")) + # Custom colors
+  scale_fill_manual(values = c("RCVD" = colors[1], "Traditional" = colors[6])) + # Custom colors
   labs(
     title = "Impact of Mix on 2020 Election",
     subtitle = "Comparing RCV vs Traditional Calculation",
@@ -83,8 +89,8 @@ ggplot(data, aes(x = Demographic, y = Value, fill = Calculation_Method)) +
     y = "Total Votes"
   ) +
   scale_y_continuous(labels = scales::comma, # Format y-axis labels with commas
-                     breaks = seq(-200000, 1000000, by = 200000), # Set specific breaks
-                     limits = c(-200000, 1000000)) + # Set y-axis limits
+                     breaks = seq(-400000, 1000000, by = 200000), # Set specific breaks
+                     limits = c(-400000, 1000000)) + # Set y-axis limits
   theme_bw() +
   theme(
     plot.title = element_text(hjust = 0.5, size = 16, face = "bold"), # Center and style main title
@@ -213,10 +219,10 @@ ggplot(final_data, aes(x = Calculation_Method, y = Value, fill = Component)) +
   facet_wrap(~ Demographic, scales = "free_y", nrow = 2) + # Facet into 2 rows
   scale_fill_manual(
     values = c(
-      "Rate" = "blue",       # blue
-      "Composition" = "forestgreen", # green
-      "Volume" = "orange",    # orange
-      "Residual" = "#e78ac3"    # Pinkish
+      "Rate" = colors[2],       # blue
+      "Composition" = colors[3], # green
+      "Volume" = colors[4],    # orange
+      "Residual" = colors[5]    # Pinkish
     ),
     breaks = c("Rate", "Composition", "Volume", "Residual") # Ensure order in legend
   ) +
@@ -282,7 +288,7 @@ main_plot_data <- data_hispanic %>%
 
 p_main <- ggplot(main_plot_data, aes(x = Component, y = Value, fill = Data_Source)) +
   geom_bar(stat = "identity", position = position_dodge(width = 0.75), width = 0.7) + # Changed to grouped bars
-  scale_fill_manual(values = c("ANES" = "darkred", "PEW" = "purple")) + # Custom colors
+  scale_fill_manual(values = c("ANES" = colors[1], "PEW" = colors[6])) + # Custom colors
   labs(
     title = "Shifting Interpretations of 2016 vs 2020",
     subtitle = "Comparing Pew vs ANES Data for Hispanic Voters",
@@ -317,7 +323,7 @@ residual_data <- data_hispanic %>%
 p_residual <- ggplot(residual_data, aes(x = Data_Source, y = Value, fill = Data_Source)) +
   geom_bar(stat = "identity", position = position_dodge(width = 0.7)) +
   coord_flip() + # Make bars horizontal
-  scale_fill_manual(values = c("ANES" = "darkred", "PEW" = "purple")) + # Use main plot colors for consistency
+  scale_fill_manual(values = c("ANES" = colors[1], "PEW" = colors[6])) + # Use main plot colors for consistency
   labs(
     title = "Total Source Residuals vs True Results", # Title for the residual chart
     subtitle = "",
@@ -403,9 +409,9 @@ ggplot(final_data_2020, aes(x = Demographic, y = Value, fill = Component)) +
   geom_bar(stat = "identity", position = "stack", width = 0.7) +
   scale_fill_manual(
     values = c(
-      "Rate" = "blue",        # blue
-      "Composition" = "forestgreen", # green
-      "Volume" = "orange"    # orange
+      "Rate" = colors[2],        # blue
+      "Composition" = colors[3], # green
+      "Volume" = colors[4]    # orange
     ),
     breaks = c("Rate", "Composition", "Volume", "Residual") # Ensure order in legend
   ) +
@@ -492,9 +498,9 @@ ggplot(final_data_2024, aes(x = Demographic, y = Value, fill = Component)) +
   geom_bar(stat = "identity", position = "stack", width = 0.7) +
   scale_fill_manual(
     values = c(
-      "Rate" = "blue",        # blue
-      "Composition" = "forestgreen", # green
-      "Volume" = "orange"    # orange
+      "Rate" = colors[2],        # blue
+      "Composition" = colors[3], # green
+      "Volume" = colors[4]    # orange
     ),
     breaks = c("Rate", "Composition", "Volume", "Residual") # Ensure order in legend
   ) +
@@ -596,9 +602,9 @@ ggplot(final_data_1624, aes(x = Demographic, y = Value, fill = Component)) +
   geom_bar(stat = "identity", position = "stack", width = 0.7) +
   scale_fill_manual(
     values = c(
-      "Rate" = "blue",        # blue
-      "Composition" = "forestgreen", # green
-      "Volume" = "orange"    # orange
+      "Rate" = colors[2],        # blue
+      "Composition" = colors[3], # green
+      "Volume" = colors[4]    # orange
     ),
     breaks = c("Rate", "Composition", "Volume", "Residual") # Ensure order in legend
   ) +
