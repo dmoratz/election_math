@@ -62,7 +62,10 @@ colors = viridis(6, option = "turbo")
 ```{r, warning = FALSE}
 # --- 1. Define the specific point (x_0, f(x_0)) ---
 x0 <- 3
+x1 <- 5
 f_x0 <- log(x0 - 2) + 3 # The exact y-value (approx 4.0986)
+f_x1 <- log(x1 - 2) + 3 # The exact y-value (approx 4.0986)
+L_x1 <- x1
 
 # --- Plot Code with Custom Axis Ticks and Labels ---
 
@@ -74,17 +77,23 @@ approx_func <- function(x) x
 
 ggplot(
     # The domain of log(x-2)+3 is x > 2
-    data = data.frame(x = c(2.01, 10)),
+    data = data.frame(x = c(2.01, 7)),
     mapping = aes(x = x)
 ) +
-    # 2. Add Perpendicular Segments to the Axes
+    # 2. Add Perpendicular Segments to the Axes for x0 and x1
+    # x0 segments
     geom_segment(
-        aes(x = x0, y = 0, xend = x0, yend = f_x0),
-        linetype = "dotted", color = "grey50", linewidth = 0.5
+        aes(x = x0, y = 0, xend = x0, yend = f_x0), linetype = "dotted", color = "grey50", linewidth = 0.5
     ) +
     geom_segment(
-        aes(x = 0, y = f_x0, xend = x0, yend = f_x0),
-        linetype = "dotted", color = "grey50", linewidth = 0.5
+        aes(x = 0, y = f_x0, xend = x0, yend = f_x0), linetype = "dotted", color = "grey50", linewidth = 0.5
+    ) +
+    # x1 segments
+    geom_segment(
+        aes(x = x1, y = 0, xend = x1, yend = f_x1), linetype = "dotted", color = "grey50", linewidth = 0.5
+    ) +
+    geom_segment(
+        aes(x = 0, y = f_x1, xend = x1, yend = f_x1), linetype = "dotted", color = "grey50", linewidth = 0.5
     ) +
 
     # 3. Add the two function lines
@@ -99,49 +108,66 @@ ggplot(
         color = colors[6],
         linetype = "dashed"
     ) +
-
-    # 4. Highlight the point
+    
+    # 4. Highlight the points
     geom_point(
-        aes(x = x0, y = f_x0),
+        aes(x = x0, y = f_x0), # Point of Approximation
         size = 3,
         color = "black"
     ) +
-
-    # 5. DIRECT LINE LABELING (using geom_label for clarity on the graph)
+    geom_point(
+        aes(x = x1, y = f_x1), # Point on the true function at x1
+        size = 3,
+        color = colors[1]
+    ) +
+    geom_point(
+        aes(x = x1, y = L_x1), # Point on the approximation at x1
+        size = 3,
+        color = colors[6]
+    ) +
     
-    # Label for the log line ("function of interest")
+    # 5. ERROR VISUALIZATION (Vertical line and Label)
+    # A. Draw a segment connecting the true value f(x1) and the approximation L(x1)
+    geom_segment(
+        aes(x = x1, y = f_x1+.15, xend = x1, yend = L_x1-.05),
+        color = "black", 
+        linewidth = .5,
+        arrow = arrow(ends = "both", type = "closed", length = unit(0.075, "inches")) # Optional arrowheads for a "bracket" effect
+    ) +
+    
+    # B. Label the error
     geom_label(
-        # Position the label on the log function curve (e.g., at x=8)
-        aes(x = 6, y = log_func(6)),
+        # Place the label to the right of the error segment, midway between f(x1) and L(x1)
+        aes(x = x1 + 1, y = (f_x1 + L_x1) / 2+.25),
+        label = "Approximation\nError",
+        color = "black", fill = "white", label.padding = unit(0.25, "lines"), label.r = unit(0.15, "lines"),
+        size = 4
+    ) +
+
+    # 6. DIRECT LINE LABELING
+    geom_label(
+        aes(x = 4, y = log_func(4)-.85), 
         label = "Function of Interest",
-        color = colors[1],
-        fill = "white",
-        label.padding = unit(0.25, "lines"),
-        label.r = unit(0.15, "lines")
+        color = colors[1], fill = "white", label.padding = unit(0.25, "lines"), label.r = unit(0.15, "lines")
     ) +
-    
-    # Label for the dashed line ("FO Taylor Approximation")
     geom_label(
-        # Position the label along the dashed line (e.g., at x=8)
-        aes(x = 6, y = approx_func(6)),
+        aes(x = 6, y = approx_func(6)), 
         label = "FO Taylor Approximation",
-        color = colors[6],
-        fill = "white",
-        label.padding = unit(0.25, "lines"),
-        label.r = unit(0.15, "lines")
+        color = colors[6], fill = "white", label.padding = unit(0.25, "lines"), label.r = unit(0.15, "lines")
     ) +
 
-    # 6. CUSTOM AXIS SCALES
+    # 7. CUSTOM AXIS SCALES
     scale_x_continuous(
-        breaks = c(x0),
-        labels = expression(x[0])
+        breaks = c(x0, x1),
+        labels = c(expression(x[0]), expression(x[1]))
     ) +
     scale_y_continuous(
-        breaks = c(f_x0),
-        labels = expression(f(x[0]))
+        # Only show ticks for 0, the true values, and the approximate value at x1
+        breaks = c(0, f_x0, f_x1),
+        labels = c("0", expression(f(x[0])), expression(f(x[1])))
     ) +
 
-    # 7. Add labels
+    # 8. Add labels
     labs(
         title = expression("Challenges of Non-Linearity"),
         subtitle = expression("Visualizing a Function and its First-Order Taylor Approximation"),
@@ -149,10 +175,8 @@ ggplot(
         y = ""
     ) +
 
-    # 8. Ensure the plot limits are consistent
+    # 9. Final Aesthetics
     coord_cartesian(xlim = c(0, 7), ylim = c(0, 7)) +
-
-    # 9. Use a clean theme and remove gridlines
     theme_bw() +
     theme(
         panel.grid.major = element_blank(),
