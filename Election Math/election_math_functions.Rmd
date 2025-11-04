@@ -396,6 +396,61 @@ rcv_rate_mix <- rcv_analysis(margin_mix_2020, margin_mix_2020_rate_mix)
 
 ```
 
+```{r}
+# RCV Alternative Order Analysis
+rcv_analysis_alt <- function(data1, data2) {
+  # Calculate B/W (Dem vs Repub across 2 years) Table ---
+  # This part directly calculates the differences between the 2nd election and 
+  # the first election data.
+  b_w_df <<- data2 %>%
+    select(Race, Dem, Repub, Total, Gross_Margin, Trad_Mar, Trad_Mix) %>%
+    mutate(
+      Dem = Dem - data1$Dem,
+      Repub = Repub - data1$Repub,
+      Total = Total - data1$Total,
+      Gross_Margin = Gross_Margin - data1$Gross_Margin,
+      Trad_Mar = Trad_Mar - data1$Trad_Mar,
+      Trad_Mix = Trad_Mix - data1$Trad_Mix
+    )
+  
+  # The following calculations are done on a row-by-row basis (by race)
+  # The `get_total_sum()` function pulls the total from the data frame.
+  
+  final_df <- b_w_df %>%
+    mutate(
+      # The formulas are interpreted based on standard variance analysis.
+      # Rate Variance: 
+      # Change in `Trad_Mar` * Total from 1st election * `Trad_Mix` from 1st election
+      Rate = (data2$Trad_Mar - data1$Trad_Mar) * sum(data1$Total) * data2$Trad_Mix,
+      
+      # Mix Variance: Change in `Trad_Mix` * Total from 1st election * `Trad_Mar` from 1st election
+      Mix = (data2$Trad_Mix - data1$Trad_Mix) * sum(data1$Total) * data1$Trad_Mar,
+      
+      # Volume Variance: Change in `Total` * `Trad_Mar` from 1st election * `Trad_Mix` from 1st election
+      Volume = (sum(data2$Total) - sum(data1$Total)) * data2$Trad_Mar * data2$Trad_Mix,
+      
+      # The total of the three variances should equal the change in Gross Margin.
+      # This is your `Calc Mar Chng` column.
+      Calc_Mar_Chng = Rate + Mix + Volume,
+      
+      # `Var to Act` (Variance to Actual) is the difference between the
+      # change in Gross Margin and the calculated change.
+      Var_to_Act = b_w_df$Gross_Margin - Calc_Mar_Chng,10,
+      
+      # `Variance %`
+      Variance_pct = Var_to_Act / b_w_df$Gross_Margin
+    ) %>%
+    # select only the outcome columns
+    select(Race, Rate, Mix, Volume, Calc_Mar_Chng, Var_to_Act, Variance_pct)
+  
+  # Return the final table, which includes all the calculated components.
+  return(final_df)
+}
+
+rcv_simple_sim_alt <- rcv_analysis_alt(simple_2016, simple_2020)
+```
+
+
 # Data write out
 
 ```{r}
@@ -411,6 +466,7 @@ data_to_write <- list(derivative_grimmer_data = derivative_grimmer_data,
                       rcv_pew_data_20v24 = rcv_pew_data_20v24,
                       rcv_pew_data_16v24 = rcv_pew_data_16v24,
                       rcv_simple_sim = rcv_simple_sim,
+                      rcv_simple_sim_alt = rcv_simple_sim_alt,
                       rcv_rate_only = rcv_rate_only,
                       rcv_mix_only = rcv_mix_only,
                       rcv_rate_mix = rcv_rate_mix)

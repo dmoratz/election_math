@@ -28,6 +28,7 @@ rcv_pew_20v24 <- election_analysis_data$rcv_pew_data_20v24
 rcv_pew_16v24 <- election_analysis_data$rcv_pew_data_16v24
 derivative_pew <- election_analysis_data$derivative_pew_data
 rcv_simple_sim <- election_analysis_data$rcv_simple_sim
+rcv_simple_sim_alt <- election_analysis_data$rcv_simple_sim_alt
 rcv_rate_only <- election_analysis_data$rcv_rate_only
 rcv_mix_only <- election_analysis_data$rcv_mix_only
 rcv_rate_mix <- election_analysis_data$rcv_rate_mix
@@ -105,6 +106,128 @@ ggplot(data, aes(x = Demographic, y = Value, fill = Calculation_Method)) +
   )
 
 ggsave("simple_simulation_chart.png", width = 10, height = 6, dpi = 300)
+```
+
+# Simple Sim, Alt Order
+
+```{r}
+# Use the Grimmer Data
+# This data represents the components for each calculation method and a total change.
+# You will need to replace these with your actual numbers.
+data_components <- data.frame(
+  Demographic = rep(c("Non-White", "White"), each = 2),
+  Calculation_Method = rep(c("RCVD", "Alt Order"), times = 2),
+  Rate = c(
+    # Non-White
+    rcv_simple_sim$Rate[1], rcv_simple_sim_alt$Rate[1],
+    # White
+    rcv_simple_sim$Rate[2], rcv_simple_sim_alt$Rate[2]
+  ),
+  Composition = c(
+    # Non-White
+    rcv_simple_sim$Mix[1], rcv_simple_sim_alt$Mix[1],
+    # White
+    rcv_simple_sim$Mix[2], rcv_simple_sim_alt$Mix[2]
+  ),
+  Volume = c(
+    # Non-White
+    rcv_simple_sim$Volume[1], rcv_simple_sim_alt$Volume[1],
+    # White
+    rcv_simple_sim$Volume[2], rcv_simple_sim_alt$Volume[2]
+  ),
+  Residual = c(
+    # Non-White (Traditional has residual, RCV has 0)
+    rcv_simple_sim$Var_to_Act[1], rcv_simple_sim_alt$Var_to_Act[1],
+    # White
+    rcv_simple_sim$Var_to_Act[2], rcv_simple_sim_alt$Var_to_Act[2]
+  )
+)
+
+# Calculate the 'Total Change' for Traditional and RCV based on components
+data_components <- data_components %>%
+  rowwise() %>%
+  mutate(Calculated_Total = sum(Rate, Composition, Volume, Residual)) %>%
+  ungroup()
+
+# Calculate total components across all demographics for Traditional and RCV
+total_components <- data_components %>%
+  group_by(Calculation_Method) %>%
+  summarise(
+    Rate = sum(Rate),
+    Composition = sum(Composition),
+    Volume = sum(Volume),
+    Residual = sum(Residual)
+  ) %>%
+  mutate(Demographic = "Total") %>%
+  ungroup()
+
+# Bind this to the original data_components
+data_components_with_total <- bind_rows(data_components, total_components)
+
+# Reshape the components data for stacking
+data_long <- data_components_with_total %>% # Use the combined data
+  pivot_longer(
+    cols = c(Rate, Composition, Volume, Residual),
+    names_to = "Component",
+    values_to = "Value"
+  ) %>%
+  # Add a 'Type' column to distinguish between 'Component'
+  mutate(Type = "Component")
+
+# Combine the data - only using the 'data_long' for components
+final_data <- data_long %>%
+  # Order the Calculation_Method for plotting
+  mutate(Calculation_Method = factor(Calculation_Method,
+                                     levels = c("RCVD", "Alt Order"))) %>%
+  # Order the Component for stacking (bottom to top)
+  mutate(Component = factor(Component,
+                            levels = c("Residual", "Volume", "Composition", "Rate"))) %>%
+  # Order the Demographic groups, including "Total" at the end
+  mutate(Demographic = factor(Demographic,
+                              levels = c("Non-White", "White", "Total")))
+```
+
+```{r}
+# 2. Create the stacked bar chart using ggplot2
+ggplot(final_data, aes(x = Calculation_Method, y = Value, fill = Component)) +
+  geom_bar(stat = "identity", position = "stack", width = 0.7) +
+  facet_wrap(~ Demographic, scales = "free_y", nrow = 2) + # Facet into 2 rows
+  scale_fill_manual(
+    values = c(
+      "Rate" = colors[2],       # blue
+      "Composition" = colors[3], # green
+      "Volume" = colors[4],    # orange
+      "Residual" = colors[5]    # Pinkish
+    ),
+    breaks = c("Rate", "Composition", "Volume", "Residual") # Ensure order in legend
+  ) +
+  labs(
+    title = "2020 vs 2020 Hypothetical Vote Change Decomposition",
+    subtitle = "Comparing RCVD vs RCVD Alternative Order",
+    x = "", # X-axis label handled by facets and subheaders
+    y = "Vote Change for Democratic Candidate"
+  ) +
+  scale_y_continuous(labels = scales::comma) + # Format y-axis labels with commas
+  theme_bw() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5, size = 14),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10), # Rotated 45 degrees, right-justified
+    axis.text.y = element_text(size = 10),
+    axis.title.y = element_text(size = 12, margin = margin(r = 10)), # Add margin to y-axis title
+    legend.position = "right",
+    legend.title = element_text(size = 12, face = "bold"),
+    legend.text = element_text(size = 10),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_line(color = "grey", linetype = "dashed"),
+    panel.grid.minor.y = element_blank(),
+    strip.text = element_text(size = 12, face = "bold", margin = margin(b = 10, unit = "pt"))#, # Added bottom margin to facet labels
+    #plot.margin = unit(c(2, 1, 1, 1), "cm") # Increased top plot margin to 2cm
+  )
+
+# To save the plot (optional)
+ggsave("simple_sim_alt_chart.png", width = 12, height = 7, dpi = 300)
 ```
 
 # Reimagining the 2020 Election
