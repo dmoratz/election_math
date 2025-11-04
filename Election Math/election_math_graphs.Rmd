@@ -138,7 +138,7 @@ ggplot(
     # B. Label the error
     geom_label(
         # Place the label to the right of the error segment, midway between f(x1) and L(x1)
-        aes(x = x1 + 1, y = (f_x1 + L_x1) / 2+.25),
+        aes(x = x1 + .75, y = (f_x1 + L_x1) / 2+.25),
         label = "Approximation\nError",
         color = "black", fill = "white", label.padding = unit(0.25, "lines"), label.r = unit(0.15, "lines"),
         size = 4
@@ -163,8 +163,8 @@ ggplot(
     ) +
     scale_y_continuous(
         # Only show ticks for 0, the true values, and the approximate value at x1
-        breaks = c(0, f_x0, f_x1),
-        labels = c("0", expression(f(x[0])), expression(f(x[1])))
+        breaks = c(0, f_x0, f_x1, L_x1),
+        labels = c("0", expression(f(x[0])), expression(f(x[1])), expression(FO(x[1])))
     ) +
 
     # 8. Add labels
