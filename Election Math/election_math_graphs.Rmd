@@ -57,6 +57,116 @@ vote_margin_diff_1624 <- vote_margin_2024 - vote_margin_2016
 colors = viridis(6, option = "turbo")
 ```
 
+# Taylor Series Graph
+
+```{r, warning = FALSE}
+# --- 1. Define the specific point (x_0, f(x_0)) ---
+x0 <- 3
+f_x0 <- log(x0 - 2) + 3 # The exact y-value (approx 4.0986)
+
+# --- Plot Code with Custom Axis Ticks and Labels ---
+
+# --- Define the functions for reference ---
+log_func <- function(x) log(x-2)+3
+approx_func <- function(x) x
+
+# --- Plot Code with Direct Line Labels ---
+
+ggplot(
+    # The domain of log(x-2)+3 is x > 2
+    data = data.frame(x = c(2.01, 10)),
+    mapping = aes(x = x)
+) +
+    # 2. Add Perpendicular Segments to the Axes
+    geom_segment(
+        aes(x = x0, y = 0, xend = x0, yend = f_x0),
+        linetype = "dotted", color = "grey50", linewidth = 0.5
+    ) +
+    geom_segment(
+        aes(x = 0, y = f_x0, xend = x0, yend = f_x0),
+        linetype = "dotted", color = "grey50", linewidth = 0.5
+    ) +
+
+    # 3. Add the two function lines
+    stat_function(
+        fun = log_func,
+        linewidth = 1,
+        color = colors[1]
+    ) +
+    stat_function(
+        fun = approx_func,
+        linewidth = 1,
+        color = colors[6],
+        linetype = "dashed"
+    ) +
+
+    # 4. Highlight the point
+    geom_point(
+        aes(x = x0, y = f_x0),
+        size = 3,
+        color = "black"
+    ) +
+
+    # 5. DIRECT LINE LABELING (using geom_label for clarity on the graph)
+    
+    # Label for the log line ("function of interest")
+    geom_label(
+        # Position the label on the log function curve (e.g., at x=8)
+        aes(x = 6, y = log_func(6)),
+        label = "Function of Interest",
+        color = colors[1],
+        fill = "white",
+        label.padding = unit(0.25, "lines"),
+        label.r = unit(0.15, "lines")
+    ) +
+    
+    # Label for the dashed line ("FO Taylor Approximation")
+    geom_label(
+        # Position the label along the dashed line (e.g., at x=8)
+        aes(x = 6, y = approx_func(6)),
+        label = "FO Taylor Approximation",
+        color = colors[6],
+        fill = "white",
+        label.padding = unit(0.25, "lines"),
+        label.r = unit(0.15, "lines")
+    ) +
+
+    # 6. CUSTOM AXIS SCALES
+    scale_x_continuous(
+        breaks = c(x0),
+        labels = expression(x[0])
+    ) +
+    scale_y_continuous(
+        breaks = c(f_x0),
+        labels = expression(f(x[0]))
+    ) +
+
+    # 7. Add labels
+    labs(
+        title = expression("Challenges of Non-Linearity"),
+        subtitle = expression("Visualizing a Function and its First-Order Taylor Approximation"),
+        x = "",
+        y = ""
+    ) +
+
+    # 8. Ensure the plot limits are consistent
+    coord_cartesian(xlim = c(0, 7), ylim = c(0, 7)) +
+
+    # 9. Use a clean theme and remove gridlines
+    theme_bw() +
+    theme(
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 14),
+        axis.text.y = element_text(size = 14),
+        plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5)
+    )
+
+ggsave("fo_taylor.png", width = 10, height = 6, dpi = 300)
+```
+
+
 # Simple Simulation
 
 ```{r}
@@ -82,7 +192,7 @@ ggplot(data, aes(x = Demographic, y = Value, fill = Calculation_Method)) +
   geom_bar(stat = "identity", position = position_dodge(width = 0.75), width = 0.7) +
   scale_fill_manual(values = c("RCVD" = colors[1], "Traditional" = colors[6])) + # Custom colors
   labs(
-    title = "Impact of Mix on Simulated 2020 Election",
+    title = "Impact of Composition on Simulated 2020 Election",
     subtitle = "Comparing RCVD vs Traditional Calculation",
     x = "", 
     y = "Total Votes"
@@ -105,8 +215,131 @@ ggplot(data, aes(x = Demographic, y = Value, fill = Calculation_Method)) +
     panel.grid.minor.y = element_blank() # Remove minor horizontal grid lines
   )
 
-ggsave("simple_simulation_chart.png", width = 10, height = 6, dpi = 300)
+ggsave("simple_sim_mix_chart.png", width = 10, height = 6, dpi = 300)
 ```
+
+# Simple Sim, Full Chart
+
+```{r}
+# Use the Grimmer Data
+# This data represents the components for each calculation method and a total change.
+# You will need to replace these with your actual numbers.
+data_components <- data.frame(
+  Demographic = rep(c("Non-White", "White"), each = 2),
+  Calculation_Method = rep(c("Traditional", "RCVD"), times = 2),
+  Rate = c(
+    # Non-White
+    derivative_simple_sim$Rate[1], rcv_simple_sim$Rate[1],
+    # White
+    derivative_simple_sim$Rate[2], rcv_simple_sim$Rate[2]
+  ),
+  Composition = c(
+    # Non-White
+    derivative_simple_sim$Mix[1], rcv_simple_sim$Mix[1],
+    # White
+    derivative_simple_sim$Mix[2], rcv_simple_sim$Mix[2]
+  ),
+  Volume = c(
+    # Non-White
+    derivative_simple_sim$Volume[1], rcv_simple_sim$Volume[1],
+    # White
+    derivative_simple_sim$Volume[2], rcv_simple_sim$Volume[2]
+  ),
+  Residual = c(
+    # Non-White (Traditional has residual, RCV has 0)
+    derivative_simple_sim$Var_to_Act[1], rcv_simple_sim$Var_to_Act[1],
+    # White
+    derivative_simple_sim$Var_to_Act[2], rcv_simple_sim$Var_to_Act[2]
+  )
+)
+
+# Calculate the 'Total Change' for Traditional and RCV based on components
+data_components <- data_components %>%
+  rowwise() %>%
+  mutate(Calculated_Total = sum(Rate, Composition, Volume, Residual)) %>%
+  ungroup()
+
+# Calculate total components across all demographics for Traditional and RCV
+total_components <- data_components %>%
+  group_by(Calculation_Method) %>%
+  summarise(
+    Rate = sum(Rate),
+    Composition = sum(Composition),
+    Volume = sum(Volume),
+    Residual = sum(Residual)
+  ) %>%
+  mutate(Demographic = "Total") %>%
+  ungroup()
+
+# Bind this to the original data_components
+data_components_with_total <- bind_rows(data_components, total_components)
+
+# Reshape the components data for stacking
+data_long <- data_components_with_total %>% # Use the combined data
+  pivot_longer(
+    cols = c(Rate, Composition, Volume, Residual),
+    names_to = "Component",
+    values_to = "Value"
+  ) %>%
+  # Add a 'Type' column to distinguish between 'Component'
+  mutate(Type = "Component")
+
+# Combine the data - only using the 'data_long' for components
+final_data_simple <- data_long %>%
+  # Order the Calculation_Method for plotting
+  mutate(Calculation_Method = factor(Calculation_Method,
+                                     levels = c("Traditional", "RCVD"))) %>%
+  # Order the Component for stacking (bottom to top)
+  mutate(Component = factor(Component,
+                            levels = c("Residual", "Volume", "Composition", "Rate"))) %>%
+  # Order the Demographic groups, including "Total" at the end
+  mutate(Demographic = factor(Demographic,
+                              levels = c("Non-White", "White", "Total")))
+```
+
+```{r}
+# 2. Create the stacked bar chart using ggplot2
+ggplot(final_data_simple, aes(x = Calculation_Method, y = Value, fill = Component)) +
+  geom_bar(stat = "identity", position = "stack", width = 0.7) +
+  facet_wrap(~ Demographic, scales = "free_y", nrow = 2) + # Facet into 2 rows
+  scale_fill_manual(
+    values = c(
+      "Rate" = colors[2],       # blue
+      "Composition" = colors[3], # green
+      "Volume" = colors[4],    # orange
+      "Residual" = colors[5]    # Pinkish
+    ),
+    breaks = c("Rate", "Composition", "Volume", "Residual") # Ensure order in legend
+  ) +
+  labs(
+    title = "2016 vs 2020 Simple Data",
+    subtitle = "Comparing Traditional vs RCVD Approach",
+    x = "", # X-axis label handled by facets and subheaders
+    y = "Vote Change for Democratic Candidate"
+  ) +
+  scale_y_continuous(labels = scales::comma) + # Format y-axis labels with commas
+  theme_bw() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5, size = 14),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10), # Rotated 45 degrees, right-justified
+    axis.text.y = element_text(size = 10),
+    axis.title.y = element_text(size = 12, margin = margin(r = 10)), # Add margin to y-axis title
+    legend.position = "right",
+    legend.title = element_text(size = 12, face = "bold"),
+    legend.text = element_text(size = 10),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_line(color = "grey", linetype = "dashed"),
+    panel.grid.minor.y = element_blank(),
+    strip.text = element_text(size = 12, face = "bold", margin = margin(b = 10, unit = "pt"))#, # Added bottom margin to facet labels
+    #plot.margin = unit(c(2, 1, 1, 1), "cm") # Increased top plot margin to 2cm
+  )
+
+# To save the plot (optional)
+ggsave("simple_sim_full_chart.png", width = 12, height = 7, dpi = 300)
+```
+
 
 # Simple Sim, Alt Order
 
@@ -175,7 +408,7 @@ data_long <- data_components_with_total %>% # Use the combined data
   mutate(Type = "Component")
 
 # Combine the data - only using the 'data_long' for components
-final_data <- data_long %>%
+final_data_alt <- data_long %>%
   # Order the Calculation_Method for plotting
   mutate(Calculation_Method = factor(Calculation_Method,
                                      levels = c("RCVD", "Alt Order"))) %>%
@@ -189,7 +422,7 @@ final_data <- data_long %>%
 
 ```{r}
 # 2. Create the stacked bar chart using ggplot2
-ggplot(final_data, aes(x = Calculation_Method, y = Value, fill = Component)) +
+ggplot(final_data_alt, aes(x = Calculation_Method, y = Value, fill = Component)) +
   geom_bar(stat = "identity", position = "stack", width = 0.7) +
   facet_wrap(~ Demographic, scales = "free_y", nrow = 2) + # Facet into 2 rows
   scale_fill_manual(
@@ -323,7 +556,7 @@ data_long <- data_components_with_total %>% # Use the combined data
   mutate(Type = "Component")
 
 # Combine the data - only using the 'data_long' for components
-final_data <- data_long %>%
+final_data_rate_mix <- data_long %>%
   # Order the Calculation_Method for plotting
   mutate(Calculation_Method = factor(Calculation_Method,
                                      levels = c("Traditional", "RCVD"))) %>%
@@ -337,7 +570,7 @@ final_data <- data_long %>%
 
 ```{r}
 # 2. Create the stacked bar chart using ggplot2
-ggplot(final_data, aes(x = Calculation_Method, y = Value, fill = Component)) +
+ggplot(final_data_rate_mix, aes(x = Calculation_Method, y = Value, fill = Component)) +
   geom_bar(stat = "identity", position = "stack", width = 0.7) +
   facet_wrap(~ Demographic, scales = "free_y", nrow = 2) + # Facet into 2 rows
   scale_fill_manual(
@@ -415,7 +648,7 @@ ggplot(data, aes(x = Demographic, y = Value, fill = Calculation_Method)) +
   geom_bar(stat = "identity", position = position_dodge(width = 0.75), width = 0.7) +
   scale_fill_manual(values = c("RCVD" = colors[1], "Traditional" = colors[6])) + # Custom colors
   labs(
-    title = "Impact of Mix on 2020 Election",
+    title = "Impact of Composition on 2020 Election",
     subtitle = "Comparing RCV vs Traditional Calculation",
     x = "", 
     y = "Total Votes"
@@ -532,7 +765,7 @@ data_long <- data_components_with_total %>% # Use the combined data
   mutate(Type = "Component")
 
 # Combine the data - only using the 'data_long' for components
-final_data <- data_long %>%
+final_data_full <- data_long %>%
   # Order the Calculation_Method for plotting
   mutate(Calculation_Method = factor(Calculation_Method,
                                      levels = c("Traditional", "RCVD"))) %>%
@@ -546,7 +779,7 @@ final_data <- data_long %>%
 
 ```{r}
 # 2. Create the stacked bar chart using ggplot2
-ggplot(final_data, aes(x = Calculation_Method, y = Value, fill = Component)) +
+ggplot(final_data_full, aes(x = Calculation_Method, y = Value, fill = Component)) +
   geom_bar(stat = "identity", position = "stack", width = 0.7) +
   facet_wrap(~ Demographic, scales = "free_y", nrow = 2) + # Facet into 2 rows
   scale_fill_manual(
@@ -657,7 +890,7 @@ p_residual <- ggplot(residual_data, aes(x = Data_Source, y = Value, fill = Data_
   coord_flip() + # Make bars horizontal
   scale_fill_manual(values = c("ANES" = colors[1], "PEW" = colors[6])) + # Use main plot colors for consistency
   labs(
-    title = "Total Source Residuals vs True Results", # Title for the residual chart
+    title = "Total Source Residuals vs True Results - All Voting Groups", # Title for the residual chart
     subtitle = "",
     x = "", # No x-axis label
     y = "Residual Value" # Y-axis label for residual
