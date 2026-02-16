@@ -1,0 +1,1310 @@
+---
+title: "election_math_graphs"
+author: "Donald Moratz"
+date: "2025-07-02"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+rm(list = ls())
+library(pacman)
+p_load(foreign, haven, ggplot2, broom, DataCombine, plm, estimatr, gsynth, reshape2, zoo, stargazer, here, modelsummary, interflex, sandwich, multcomp, lmtest, kableExtra, texreg, fastDummies, ggdag, AER ,stats, tidyr, cowplot, stringr, knitr, scales, dplyr, viridis, ggrepel)
+
+options(scipen = 999)
+
+set.seed(3184)
+
+election_analysis_data <- readRDS("election_analysis.rds")
+derivative_grimmer <- election_analysis_data$derivative_grimmer_data
+derivative_simple_sim <- election_analysis_data$derivative_simple_sim
+derivative_rate_only <- election_analysis_data$derivative_rate_only
+derivative_mix_only <- election_analysis_data$derivative_mix_only
+derivative_rate_mix <- election_analysis_data$derivative_rate_mix
+rcv_grimmer <- election_analysis_data$rcv_grimmer_data
+rcv_pew_16v20 <- election_analysis_data$rcv_pew_data_16v20
+rcv_pew_20v24 <- election_analysis_data$rcv_pew_data_20v24
+rcv_pew_16v24 <- election_analysis_data$rcv_pew_data_16v24
+derivative_pew <- election_analysis_data$derivative_pew_data
+rcv_simple_sim <- election_analysis_data$rcv_simple_sim
+rcv_simple_sim_alt <- election_analysis_data$rcv_simple_sim_alt
+rcv_rate_only <- election_analysis_data$rcv_rate_only
+rcv_mix_only <- election_analysis_data$rcv_mix_only
+rcv_rate_mix <- election_analysis_data$rcv_rate_mix
+
+# Vote totals
+vote_dem_2016 <- 65853514
+vote_rep_2016 <- 62984828
+vote_total_2016 <- vote_dem_2016 + vote_rep_2016
+vote_margin_2016 <- vote_dem_2016-vote_rep_2016
+vote_dem_2020 <- 81283501
+vote_rep_2020 <- 74223975
+vote_total_2020 <- vote_dem_2020 + vote_rep_2020
+vote_margin_2020 <- vote_dem_2020-vote_rep_2020
+vote_margin_diff_1620 <- vote_margin_2020 - vote_margin_2016
+vote_dem_2024 <- 75017613
+vote_rep_2024 <- 77302580
+vote_total_2024 <- vote_dem_2024 + vote_rep_2024
+vote_margin_2024 <- vote_dem_2024-vote_rep_2024
+vote_margin_diff_2024 <- vote_margin_2024 - vote_margin_2020
+vote_margin_diff_1624 <- vote_margin_2024 - vote_margin_2016
+
+```
+
+```{r}
+# create colors for consistent usage
+colors = viridis(6, option = "turbo")
+```
+
+# Taylor Series Graph
+
+```{r, warning = FALSE}
+# --- 1. Define the specific point (x_0, f(x_0)) ---
+x0 <- 3
+x1 <- 5
+f_x0 <- log(x0 - 2) + 3 # The exact y-value (approx 4.0986)
+f_x1 <- log(x1 - 2) + 3 # The exact y-value (approx 4.0986)
+L_x1 <- x1
+
+# --- Plot Code with Custom Axis Ticks and Labels ---
+
+# --- Define the functions for reference ---
+log_func <- function(x) log(x-2)+3
+approx_func <- function(x) x
+
+# --- Plot Code with Direct Line Labels ---
+
+ggplot(
+    # The domain of log(x-2)+3 is x > 2
+    data = data.frame(x = c(2.01, 7)),
+    mapping = aes(x = x)
+) +
+    # 2. Add Perpendicular Segments to the Axes for x0 and x1
+    # x0 segments
+    geom_segment(
+        aes(x = x0, y = 0, xend = x0, yend = f_x0), linetype = "dotted", color = "grey50", linewidth = 0.5
+    ) +
+    geom_segment(
+        aes(x = 0, y = f_x0, xend = x0, yend = f_x0), linetype = "dotted", color = "grey50", linewidth = 0.5
+    ) +
+    # x1 segments
+    geom_segment(
+        aes(x = x1, y = 0, xend = x1, yend = f_x1), linetype = "dotted", color = "grey50", linewidth = 0.5
+    ) +
+    geom_segment(
+        aes(x = 0, y = f_x1, xend = x1, yend = f_x1), linetype = "dotted", color = "grey50", linewidth = 0.5
+    ) +
+
+    # 3. Add the two function lines
+    stat_function(
+        fun = log_func,
+        linewidth = 1,
+        color = colors[1]
+    ) +
+    stat_function(
+        fun = approx_func,
+        linewidth = 1,
+        color = colors[6],
+        linetype = "dashed"
+    ) +
+    
+    # 4. Highlight the points
+    geom_point(
+        aes(x = x0, y = f_x0), # Point of Approximation
+        size = 3,
+        color = "black"
+    ) +
+    geom_point(
+        aes(x = x1, y = f_x1), # Point on the true function at x1
+        size = 3,
+        color = colors[1]
+    ) +
+    geom_point(
+        aes(x = x1, y = L_x1), # Point on the approximation at x1
+        size = 3,
+        color = colors[6]
+    ) +
+    
+    # 5. ERROR VISUALIZATION (Vertical line and Label)
+    # A. Draw a segment connecting the true value f(x1) and the approximation L(x1)
+    geom_segment(
+        aes(x = x1, y = f_x1+.15, xend = x1, yend = L_x1-.05),
+        color = "black", 
+        linewidth = .5,
+        arrow = arrow(ends = "both", type = "closed", length = unit(0.075, "inches")) # Optional arrowheads for a "bracket" effect
+    ) +
+    
+    # B. Label the error
+    geom_label(
+        # Place the label to the right of the error segment, midway between f(x1) and L(x1)
+        aes(x = x1 + .75, y = (f_x1 + L_x1) / 2+.25),
+        label = "Approximation\nError",
+        color = "black", fill = "white", label.padding = unit(0.25, "lines"), label.r = unit(0.15, "lines"),
+        size = 4
+    ) +
+
+    # 6. DIRECT LINE LABELING
+    geom_label(
+        aes(x = 4, y = log_func(4)-.85), 
+        label = "Function of Interest",
+        color = colors[1], fill = "white", label.padding = unit(0.25, "lines"), label.r = unit(0.15, "lines")
+    ) +
+    geom_label(
+        aes(x = 6, y = approx_func(6)), 
+        label = "FO Taylor Approximation",
+        color = colors[6], fill = "white", label.padding = unit(0.25, "lines"), label.r = unit(0.15, "lines")
+    ) +
+
+    # 7. CUSTOM AXIS SCALES
+    scale_x_continuous(
+        breaks = c(x0, x1),
+        labels = c(expression(z[0]), expression(z[1]))
+    ) +
+    scale_y_continuous(
+        # Only show ticks for 0, the true values, and the approximate value at x1
+        breaks = c(0, f_x0, f_x1, L_x1),
+        labels = c("0", expression(f(z[0])), expression(f(z[1])), expression(FO(z[1])))
+    ) +
+
+    # 8. Add labels
+    labs(
+        title = expression("Challenges of Non-Linearity"),
+        subtitle = expression("Visualizing a Function and its First-Order Taylor Approximation"),
+        x = "Group Support",
+        y = "Vote Totals"
+    ) +
+
+    # 9. Final Aesthetics
+    coord_cartesian(xlim = c(0, 7), ylim = c(0, 7)) +
+    theme_bw() +
+    theme(
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 14),
+        axis.text.y = element_text(size = 14),
+        plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5)
+    )
+
+ggsave("fo_taylor.png", width = 10, height = 6, dpi = 300)
+```
+
+
+# Simple Simulation
+
+```{r}
+# Create the data
+# data from real data grimmer tab
+data <- data.frame(
+  Demographic = c("Non-White", "Non-White",
+                  "White", "White"),
+  Calculation_Method = c("RCVD", "LDA",
+                         "RCVD", "LDA"),
+  Value = c(rcv_simple_sim$Mix[1], derivative_simple_sim$Mix[1],
+            rcv_simple_sim$Mix[2], derivative_simple_sim$Mix[2])
+)
+
+# Ensure Demographic is a factor with the desired order
+data$Demographic <- factor(data$Demographic,
+                           levels = c("Non-White", "White"))
+```
+
+```{r}
+# 2. Create the grouped bar chart using ggplot2
+ggplot(data, aes(x = Demographic, y = Value, fill = Calculation_Method)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.75), width = 0.7) +
+  scale_fill_manual(values = c("RCVD" = colors[1], "LDA" = colors[6])) +
+  geom_text(
+    aes(label = Calculation_Method, y = Value + sign(Value) * max(abs(Value)) * 0.08),
+    position = position_dodge(width = 0.75),
+    size = 3.5,
+    vjust = 0
+  ) +
+  labs(
+    title = "Impact of Composition on Simulated 2020 Election",
+    subtitle = "Comparing RCVD vs LDA Calculation",
+    x = "",
+    y = "Total Votes"
+  ) +
+  theme_bw() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5, size = 14),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.position = "none",
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_line(color = "grey", linetype = "dashed"),
+    panel.grid.minor.y = element_blank()
+  )
+
+ggsave("simple_sim_mix_chart.png", width = 10, height = 6, dpi = 300)
+```
+
+# Simple Sim, Full Chart
+
+```{r}
+# Use the Grimmer Data
+# This data represents the components for each calculation method and a total change.
+# You will need to replace these with your actual numbers.
+data_components <- data.frame(
+  Demographic = rep(c("Non-White", "White"), each = 2),
+  Calculation_Method = rep(c("LDA", "RCVD"), times = 2),
+  Rate = c(
+    # Non-White
+    derivative_simple_sim$Rate[1], rcv_simple_sim$Rate[1],
+    # White
+    derivative_simple_sim$Rate[2], rcv_simple_sim$Rate[2]
+  ),
+  Composition = c(
+    # Non-White
+    derivative_simple_sim$Mix[1], rcv_simple_sim$Mix[1],
+    # White
+    derivative_simple_sim$Mix[2], rcv_simple_sim$Mix[2]
+  ),
+  Volume = c(
+    # Non-White
+    derivative_simple_sim$Volume[1], rcv_simple_sim$Volume[1],
+    # White
+    derivative_simple_sim$Volume[2], rcv_simple_sim$Volume[2]
+  ),
+  Residual = c(
+    # Non-White (LDA has residual, RCV has 0)
+    derivative_simple_sim$Var_to_Act[1], rcv_simple_sim$Var_to_Act[1],
+    # White
+    derivative_simple_sim$Var_to_Act[2], rcv_simple_sim$Var_to_Act[2]
+  )
+)
+
+# Calculate the 'Total Change' for LDA and RCV based on components
+data_components <- data_components %>%
+  rowwise() %>%
+  mutate(Calculated_Total = sum(Rate, Composition, Volume, Residual)) %>%
+  ungroup()
+
+# Calculate total components across all demographics for LDA and RCV
+total_components <- data_components %>%
+  group_by(Calculation_Method) %>%
+  summarise(
+    Rate = sum(Rate),
+    Composition = sum(Composition),
+    Volume = sum(Volume),
+    Residual = sum(Residual)
+  ) %>%
+  mutate(Demographic = "Total") %>%
+  ungroup()
+
+# Bind this to the original data_components
+data_components_with_total <- bind_rows(data_components, total_components)
+
+# Reshape the components data for stacking
+data_long <- data_components_with_total %>% # Use the combined data
+  pivot_longer(
+    cols = c(Rate, Composition, Volume, Residual),
+    names_to = "Component",
+    values_to = "Value"
+  ) %>%
+  # Add a 'Type' column to distinguish between 'Component'
+  mutate(Type = "Component")
+
+# Combine the data - only using the 'data_long' for components
+final_data_simple <- data_long %>%
+  # Order the Calculation_Method for plotting
+  mutate(Calculation_Method = factor(Calculation_Method,
+                                     levels = c("LDA", "RCVD"))) %>%
+  # Order the Component for stacking (bottom to top)
+  mutate(Component = factor(Component,
+                            levels = c("Residual", "Volume", "Composition", "Rate"))) %>%
+  # Order the Demographic groups, including "Total" at the end
+  mutate(Demographic = factor(Demographic,
+                              levels = c("Non-White", "White", "Total")))
+```
+
+```{r}
+# 2. Create the stacked bar chart using ggplot2
+# Use geom_text with position_stack to let ggplot calculate correct positions
+# Create labels only for the "Total" facet, RCVD method
+label_data_simple <- final_data_simple %>%
+  filter(Demographic == "Total", Calculation_Method == "RCVD")
+
+ggplot(final_data_simple, aes(x = Calculation_Method, y = Value, fill = Component)) +
+  geom_bar(stat = "identity", position = "stack", width = 0.7) +
+  facet_wrap(~ Demographic, scales = "free_y", nrow = 2) +
+  geom_text(
+    data = label_data_simple,
+    aes(label = Component),
+    position = position_stack(vjust = 0.5),
+    size = 3,
+    hjust = -0.1
+  ) +
+  scale_fill_manual(
+    values = c(
+      "Rate" = colors[2],
+      "Composition" = colors[3],
+      "Volume" = colors[4],
+      "Residual" = colors[5]
+    )
+  ) +
+  labs(
+    title = "2016 vs 2020 Simple Data",
+    subtitle = "Comparing LDA vs RCVD Approach",
+    x = "",
+    y = "Vote Change for Democratic Candidate"
+  ) +
+  scale_y_continuous(labels = scales::comma) +
+  coord_cartesian(clip = "off") +
+  theme_bw() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5, size = 14),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
+    axis.text.y = element_text(size = 10),
+    axis.title.y = element_text(size = 12, margin = margin(r = 10)),
+    legend.position = "none",
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_line(color = "grey", linetype = "dashed"),
+    panel.grid.minor.y = element_blank(),
+    strip.text = element_text(size = 12, face = "bold", margin = margin(b = 10, unit = "pt")),
+    plot.margin = margin(r = 50)
+  )
+
+ggsave("simple_sim_full_chart.png", width = 12, height = 7, dpi = 300)
+```
+
+
+# Simple Sim, Alt Order
+
+```{r}
+# Use the Grimmer Data
+# This data represents the components for each calculation method and a total change.
+# You will need to replace these with your actual numbers.
+data_components <- data.frame(
+  Demographic = rep(c("Non-White", "White"), each = 2),
+  Calculation_Method = rep(c("RCVD", "Alt Order"), times = 2),
+  Rate = c(
+    # Non-White
+    rcv_simple_sim$Rate[1], rcv_simple_sim_alt$Rate[1],
+    # White
+    rcv_simple_sim$Rate[2], rcv_simple_sim_alt$Rate[2]
+  ),
+  Composition = c(
+    # Non-White
+    rcv_simple_sim$Mix[1], rcv_simple_sim_alt$Mix[1],
+    # White
+    rcv_simple_sim$Mix[2], rcv_simple_sim_alt$Mix[2]
+  ),
+  Volume = c(
+    # Non-White
+    rcv_simple_sim$Volume[1], rcv_simple_sim_alt$Volume[1],
+    # White
+    rcv_simple_sim$Volume[2], rcv_simple_sim_alt$Volume[2]
+  ),
+  Residual = c(
+    # Non-White (LDA has residual, RCV has 0)
+    rcv_simple_sim$Var_to_Act[1], rcv_simple_sim_alt$Var_to_Act[1],
+    # White
+    rcv_simple_sim$Var_to_Act[2], rcv_simple_sim_alt$Var_to_Act[2]
+  )
+)
+
+# Calculate the 'Total Change' for LDA and RCV based on components
+data_components <- data_components %>%
+  rowwise() %>%
+  mutate(Calculated_Total = sum(Rate, Composition, Volume, Residual)) %>%
+  ungroup()
+
+# Calculate total components across all demographics for LDA and RCV
+total_components <- data_components %>%
+  group_by(Calculation_Method) %>%
+  summarise(
+    Rate = sum(Rate),
+    Composition = sum(Composition),
+    Volume = sum(Volume),
+    Residual = sum(Residual)
+  ) %>%
+  mutate(Demographic = "Total") %>%
+  ungroup()
+
+# Bind this to the original data_components
+data_components_with_total <- bind_rows(data_components, total_components)
+
+# Reshape the components data for stacking
+data_long <- data_components_with_total %>% # Use the combined data
+  pivot_longer(
+    cols = c(Rate, Composition, Volume, Residual),
+    names_to = "Component",
+    values_to = "Value"
+  ) %>%
+  # Add a 'Type' column to distinguish between 'Component'
+  mutate(Type = "Component")
+
+# Combine the data - only using the 'data_long' for components
+final_data_alt <- data_long %>%
+  # Order the Calculation_Method for plotting
+  mutate(Calculation_Method = factor(Calculation_Method,
+                                     levels = c("RCVD", "Alt Order"))) %>%
+  # Order the Component for stacking (bottom to top)
+  mutate(Component = factor(Component,
+                            levels = c("Residual", "Volume", "Composition", "Rate"))) %>%
+  # Order the Demographic groups, including "Total" at the end
+  mutate(Demographic = factor(Demographic,
+                              levels = c("Non-White", "White", "Total")))
+```
+
+```{r}
+# 2. Create the stacked bar chart using ggplot2
+# Create labels only for the "Total" facet, RCVD method
+label_data_alt <- final_data_alt %>%
+  filter(Demographic == "Total", Calculation_Method == "RCVD")
+
+ggplot(final_data_alt, aes(x = Calculation_Method, y = Value, fill = Component)) +
+  geom_bar(stat = "identity", position = "stack", width = 0.7) +
+  facet_wrap(~ Demographic, scales = "free_y", nrow = 2) +
+  geom_text(
+    data = label_data_alt,
+    aes(label = Component),
+    position = position_stack(vjust = 0.5),
+    size = 3,
+    hjust = -0.1
+  ) +
+  scale_fill_manual(
+    values = c(
+      "Rate" = colors[2],
+      "Composition" = colors[3],
+      "Volume" = colors[4],
+      "Residual" = colors[5]
+    )
+  ) +
+  labs(
+    title = "2020 vs 2020 Hypothetical Vote Change Decomposition",
+    subtitle = "Comparing RCVD vs RCVD Alternative Order",
+    x = "",
+    y = "Vote Change for Democratic Candidate"
+  ) +
+  scale_y_continuous(labels = scales::comma) +
+  coord_cartesian(clip = "off") +
+  theme_bw() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5, size = 14),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
+    axis.text.y = element_text(size = 10),
+    axis.title.y = element_text(size = 12, margin = margin(r = 10)),
+    legend.position = "none",
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_line(color = "grey", linetype = "dashed"),
+    panel.grid.minor.y = element_blank(),
+    strip.text = element_text(size = 12, face = "bold", margin = margin(b = 10, unit = "pt")),
+    plot.margin = margin(r = 50)
+  )
+
+ggsave("simple_sim_alt_chart.png", width = 12, height = 7, dpi = 300)
+```
+
+# Reimagining the 2020 Election
+
+### Rate and Mix
+
+```{r}
+# Use the Grimmer Data
+# This data represents the components for each calculation method and a total change.
+# You will need to replace these with your actual numbers.
+data_components <- data.frame(
+  Demographic = rep(c("Black", "Hispanic", "Other", "White", "Unknown"), each = 2),
+  Calculation_Method = rep(c("LDA", "RCVD"), times = 5),
+  Rate = c(
+    # Black
+    derivative_rate_mix$Rate[1], rcv_rate_mix$Rate[1],
+    # Hispanic
+    derivative_rate_mix$Rate[2], rcv_rate_mix$Rate[2],
+    # Other
+    derivative_rate_mix$Rate[3], rcv_rate_mix$Rate[3],
+    # White
+    derivative_rate_mix$Rate[4], rcv_rate_mix$Rate[4],
+    # NA
+    derivative_rate_mix$Rate[5], rcv_rate_mix$Rate[5]
+  ),
+  Composition = c(
+    # Black
+    derivative_rate_mix$Mix[1], rcv_rate_mix$Mix[1],
+    # Hispanic
+    derivative_rate_mix$Mix[2], rcv_rate_mix$Mix[2],
+    # Other
+    derivative_rate_mix$Mix[3], rcv_rate_mix$Mix[3],
+    # White
+    derivative_rate_mix$Mix[4], rcv_rate_mix$Mix[4],
+    # NA
+    derivative_rate_mix$Mix[5], rcv_rate_mix$Mix[5]
+  ),
+  Volume = c(
+    # Black
+    derivative_rate_mix$Volume[1], rcv_rate_mix$Volume[1],
+    # Hispanic
+    derivative_rate_mix$Volume[2], rcv_rate_mix$Volume[2],
+    # Other
+    derivative_rate_mix$Volume[3], rcv_rate_mix$Volume[3],
+    # White
+    derivative_rate_mix$Volume[4], rcv_rate_mix$Volume[4],
+    # NA
+    derivative_rate_mix$Volume[5], rcv_rate_mix$Volume[5]
+  ),
+  Residual = c(
+    # Black (LDA has residual, RCV has 0)
+    derivative_rate_mix$Var_to_Act[1], rcv_rate_mix$Var_to_Act[1],
+    # Hispanic
+    derivative_rate_mix$Var_to_Act[2], rcv_rate_mix$Var_to_Act[2],
+    # Other
+    derivative_rate_mix$Var_to_Act[3], rcv_rate_mix$Var_to_Act[3],
+    # White
+    derivative_rate_mix$Var_to_Act[4], rcv_rate_mix$Var_to_Act[4],
+    # NA
+    derivative_rate_mix$Var_to_Act[5], rcv_rate_mix$Var_to_Act[5]
+  )
+)
+
+# Calculate the 'Total Change' for LDA and RCV based on components
+data_components <- data_components %>%
+  rowwise() %>%
+  mutate(Calculated_Total = sum(Rate, Composition, Volume, Residual)) %>%
+  ungroup()
+
+# Calculate total components across all demographics for LDA and RCV
+total_components <- data_components %>%
+  group_by(Calculation_Method) %>%
+  summarise(
+    Rate = sum(Rate),
+    Composition = sum(Composition),
+    Volume = sum(Volume),
+    Residual = sum(Residual)
+  ) %>%
+  mutate(Demographic = "Total") %>%
+  ungroup()
+
+# Bind this to the original data_components
+data_components_with_total <- bind_rows(data_components, total_components)
+
+# Reshape the components data for stacking
+data_long <- data_components_with_total %>% # Use the combined data
+  pivot_longer(
+    cols = c(Rate, Composition, Volume, Residual),
+    names_to = "Component",
+    values_to = "Value"
+  ) %>%
+  # Add a 'Type' column to distinguish between 'Component'
+  mutate(Type = "Component")
+
+# Combine the data - only using the 'data_long' for components
+final_data_rate_mix <- data_long %>%
+  # Order the Calculation_Method for plotting
+  mutate(Calculation_Method = factor(Calculation_Method,
+                                     levels = c("LDA", "RCVD"))) %>%
+  # Order the Component for stacking (bottom to top)
+  mutate(Component = factor(Component,
+                            levels = c("Residual", "Volume", "Composition", "Rate"))) %>%
+  # Order the Demographic groups, including "Total" at the end
+  mutate(Demographic = factor(Demographic,
+                              levels = c("Black", "Hispanic", "Other", "White", "Unknown", "Total")))
+```
+
+```{r}
+# 2. Create the stacked bar chart using ggplot2
+# Create labels only for the "Total" facet, RCVD method
+label_data_rate_mix <- final_data_rate_mix %>%
+  filter(Demographic == "Total", Calculation_Method == "RCVD")
+
+ggplot(final_data_rate_mix, aes(x = Calculation_Method, y = Value, fill = Component)) +
+  geom_bar(stat = "identity", position = "stack", width = 0.7) +
+  facet_wrap(~ Demographic, scales = "free_y", nrow = 2) +
+  geom_text(
+    data = label_data_rate_mix,
+    aes(label = Component),
+    position = position_stack(vjust = 0.5),
+    size = 3,
+    hjust = -0.1
+  ) +
+  scale_fill_manual(
+    values = c(
+      "Rate" = colors[2],
+      "Composition" = colors[3],
+      "Volume" = colors[4],
+      "Residual" = colors[5]
+    )
+  ) +
+  labs(
+    title = "2020 vs 2020 Hypothetical Vote Change Decomposition",
+    subtitle = "Comparing LDA vs RCVD Components",
+    x = "",
+    y = "Vote Change for Democratic Candidate"
+  ) +
+  scale_y_continuous(labels = scales::comma) +
+  coord_cartesian(clip = "off") +
+  theme_bw() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5, size = 14),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
+    axis.text.y = element_text(size = 10),
+    axis.title.y = element_text(size = 12, margin = margin(r = 10)),
+    legend.position = "none",
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_line(color = "grey", linetype = "dashed"),
+    panel.grid.minor.y = element_blank(),
+    strip.text = element_text(size = 12, face = "bold", margin = margin(b = 10, unit = "pt")),
+    plot.margin = margin(r = 50)
+  )
+
+ggsave("rate_mix_chart.png", width = 12, height = 7, dpi = 300)
+```
+
+
+
+
+# Impact of Mix
+
+```{r}
+# Create the data
+# data from real data grimmer tab
+data <- data.frame(
+  Demographic = c("Black", "Black",
+                  "Hispanic", "Hispanic",
+                  "Other", "Other",
+                  "White", "White",
+                  "Unknown", "Unknown"),
+  Calculation_Method = c("RCVD", "LDA",
+                         "RCVD", "LDA",
+                         "RCVD", "LDA",
+                         "RCVD", "LDA",
+                         "RCVD", "LDA"),
+  Value = c(rcv_grimmer$Mix[1], derivative_grimmer$Mix[1],    # Black
+            rcv_grimmer$Mix[2], derivative_grimmer$Mix[2],    # Hispanic
+            rcv_grimmer$Mix[3], derivative_grimmer$Mix[3],    # Other
+            rcv_grimmer$Mix[4], derivative_grimmer$Mix[4],    # White
+            rcv_grimmer$Mix[5], derivative_grimmer$Mix[5])     # NA
+)
+
+# Ensure Demographic is a factor with the desired order
+data$Demographic <- factor(data$Demographic,
+                           levels = c("Black", "Hispanic", "Other", "White", "Unknown"))
+```
+
+```{r}
+# 2. Create the grouped bar chart using ggplot2
+# Create label data for first demographic only to avoid repetition
+label_data_impact <- data %>%
+  filter(Demographic == "Black")
+
+ggplot(data, aes(x = Demographic, y = Value, fill = Calculation_Method)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.75), width = 0.7) +
+  scale_fill_manual(values = c("RCVD" = colors[1], "LDA" = colors[6])) +
+  geom_text(
+    data = label_data_impact,
+    aes(label = Calculation_Method, y = Value + sign(Value) * 80000),
+    position = position_dodge(width = 0.75),
+    size = 3.5,
+    vjust = 0
+  ) +
+  labs(
+    title = "Impact of Composition on 2020 Election",
+    subtitle = "Comparing RCV vs LDA Calculation",
+    x = "",
+    y = "Total Votes"
+  ) +
+  scale_y_continuous(labels = scales::comma,
+                     breaks = seq(-400000, 1000000, by = 200000),
+                     limits = c(-400000, 1000000)) +
+  theme_bw() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5, size = 14),
+    axis.text.x = element_text(size = 12),
+    axis.text.y = element_text(size = 12),
+    legend.position = "none",
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_line(color = "grey", linetype = "dashed"),
+    panel.grid.minor.y = element_blank()
+  )
+
+ggsave("election_impact_chart.png", width = 10, height = 6, dpi = 300)
+```
+
+# Tracking the Residual
+
+```{r}
+# Use the Grimmer Data
+# This data represents the components for each calculation method and a total change.
+# You will need to replace these with your actual numbers.
+data_components <- data.frame(
+  Demographic = rep(c("Black", "Hispanic", "Other", "White", "Unknown"), each = 2),
+  Calculation_Method = rep(c("LDA", "RCVD"), times = 5),
+  Rate = c(
+    # Black
+    derivative_grimmer$Rate[1], rcv_grimmer$Rate[1],
+    # Hispanic
+    derivative_grimmer$Rate[2], rcv_grimmer$Rate[2],
+    # Other
+    derivative_grimmer$Rate[3], rcv_grimmer$Rate[3],
+    # White
+    derivative_grimmer$Rate[4], rcv_grimmer$Rate[4],
+    # NA
+    derivative_grimmer$Rate[5], rcv_grimmer$Rate[5]
+  ),
+  Composition = c(
+    # Black
+    derivative_grimmer$Mix[1], rcv_grimmer$Mix[1],
+    # Hispanic
+    derivative_grimmer$Mix[2], rcv_grimmer$Mix[2],
+    # Other
+    derivative_grimmer$Mix[3], rcv_grimmer$Mix[3],
+    # White
+    derivative_grimmer$Mix[4], rcv_grimmer$Mix[4],
+    # NA
+    derivative_grimmer$Mix[5], rcv_grimmer$Mix[5]
+  ),
+  Volume = c(
+    # Black
+    derivative_grimmer$Volume[1], rcv_grimmer$Volume[1],
+    # Hispanic
+    derivative_grimmer$Volume[2], rcv_grimmer$Volume[2],
+    # Other
+    derivative_grimmer$Volume[3], rcv_grimmer$Volume[3],
+    # White
+    derivative_grimmer$Volume[4], rcv_grimmer$Volume[4],
+    # NA
+    derivative_grimmer$Volume[5], rcv_grimmer$Volume[5]
+  ),
+  Residual = c(
+    # Black (LDA has residual, RCV has 0)
+    derivative_grimmer$Var_to_Act[1], rcv_grimmer$Var_to_Act[1],
+    # Hispanic
+    derivative_grimmer$Var_to_Act[2], rcv_grimmer$Var_to_Act[2],
+    # Other
+    derivative_grimmer$Var_to_Act[3], rcv_grimmer$Var_to_Act[3],
+    # White
+    derivative_grimmer$Var_to_Act[4], rcv_grimmer$Var_to_Act[4],
+    # NA
+    derivative_grimmer$Var_to_Act[5], rcv_grimmer$Var_to_Act[5]
+  )
+)
+
+# Calculate the 'Total Change' for LDA and RCV based on components
+data_components <- data_components %>%
+  rowwise() %>%
+  mutate(Calculated_Total = sum(Rate, Composition, Volume, Residual)) %>%
+  ungroup()
+
+# Calculate total components across all demographics for LDA and RCV
+total_components <- data_components %>%
+  group_by(Calculation_Method) %>%
+  summarise(
+    Rate = sum(Rate),
+    Composition = sum(Composition),
+    Volume = sum(Volume),
+    Residual = sum(Residual)
+  ) %>%
+  mutate(Demographic = "Total") %>%
+  ungroup()
+
+# Bind this to the original data_components
+data_components_with_total <- bind_rows(data_components, total_components)
+
+# Reshape the components data for stacking
+data_long <- data_components_with_total %>% # Use the combined data
+  pivot_longer(
+    cols = c(Rate, Composition, Volume, Residual),
+    names_to = "Component",
+    values_to = "Value"
+  ) %>%
+  # Add a 'Type' column to distinguish between 'Component'
+  mutate(Type = "Component")
+
+# Combine the data - only using the 'data_long' for components
+final_data_full <- data_long %>%
+  # Order the Calculation_Method for plotting
+  mutate(Calculation_Method = factor(Calculation_Method,
+                                     levels = c("LDA", "RCVD"))) %>%
+  # Order the Component for stacking (bottom to top)
+  mutate(Component = factor(Component,
+                            levels = c("Residual", "Volume", "Composition", "Rate"))) %>%
+  # Order the Demographic groups, including "Total" at the end
+  mutate(Demographic = factor(Demographic,
+                              levels = c("Black", "Hispanic", "Other", "White", "Unknown", "Total")))
+```
+
+```{r}
+# 2. Create the stacked bar chart using ggplot2
+# Create labels only for the "Total" facet, RCVD method
+label_data_full <- final_data_full %>%
+  filter(Demographic == "Total", Calculation_Method == "RCVD")
+
+ggplot(final_data_full, aes(x = Calculation_Method, y = Value, fill = Component)) +
+  geom_bar(stat = "identity", position = "stack", width = 0.7) +
+  facet_wrap(~ Demographic, scales = "free_y", nrow = 2) +
+  geom_text(
+    data = label_data_full,
+    aes(label = Component),
+    position = position_stack(vjust = 0.5),
+    size = 3,
+    hjust = -0.1
+  ) +
+  scale_fill_manual(
+    values = c(
+      "Rate" = colors[2],
+      "Composition" = colors[3],
+      "Volume" = colors[4],
+      "Residual" = colors[5]
+    )
+  ) +
+  labs(
+    title = "2016 to 2020 Vote Change Decomposition",
+    subtitle = "Comparing LDA vs RCVD Components",
+    x = "",
+    y = "Vote Change for Democratic Candidate"
+  ) +
+  scale_y_continuous(labels = scales::comma) +
+  coord_cartesian(clip = "off") +
+  theme_bw() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5, size = 14),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
+    axis.text.y = element_text(size = 10),
+    axis.title.y = element_text(size = 12, margin = margin(r = 10)),
+    legend.position = "none",
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_line(color = "grey", linetype = "dashed"),
+    panel.grid.minor.y = element_blank(),
+    strip.text = element_text(size = 12, face = "bold", margin = margin(b = 10, unit = "pt")),
+    plot.margin = margin(r = 50)
+  )
+
+ggsave("stacked_bar_chart_decomposition.png", width = 12, height = 7, dpi = 300)
+```
+
+# Analysis of Pew Data
+
+```{r}
+# Create the data
+# data from real data grimmer tab and real pew tab
+data_hispanic <- data.frame(
+  Component = c("Rate", "Rate",
+                "Composition", "Composition",
+                "Volume", "Volume",
+                "Residual", "Residual"),
+  Data_Source = c("ANES", "PEW",
+                         "ANES", "PEW",
+                         "ANES", "PEW",
+                         "ANES", "PEW"),
+  Value = c(rcv_grimmer$Rate[2], rcv_pew_16v20$Rate[3],    # Rate
+            rcv_grimmer$Mix[2], rcv_pew_16v20$Mix[3],    # Composition
+            rcv_grimmer$Volume[2], rcv_pew_16v20$Volume[3],    # Volume
+            (sum(rcv_grimmer$Calc_Mar_Chng)-vote_margin_diff_1620), (sum(rcv_pew_16v20$Calc_Mar_Chng)-vote_margin_diff_1620))     # Residual
+)
+
+# Ensure Demographic is a factor with the desired order
+data_hispanic$Component <- factor(data_hispanic$Component,
+                           levels = c("Rate", "Composition", "Volume", "Residual"))
+```
+
+```{r}
+# Create the grouped bar chart using ggplot2
+# Filter out Residual for the main plot
+main_plot_data <- data_hispanic %>%
+  filter(Component != "Residual")
+
+# Create label data for first component only
+label_data_hispanic <- main_plot_data %>%
+  filter(Component == "Rate")
+
+p_main <- ggplot(main_plot_data, aes(x = Component, y = Value, fill = Data_Source)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.75), width = 0.7) +
+  scale_fill_manual(values = c("ANES" = colors[1], "PEW" = colors[6])) +
+  geom_text(
+    data = label_data_hispanic,
+    aes(label = Data_Source, y = Value + sign(Value) * 200000),
+    position = position_dodge(width = 0.75),
+    size = 3.5,
+    vjust = 0
+  ) +
+  labs(
+    title = "Shifting Interpretations of 2016 vs 2020",
+    subtitle = "Comparing Pew vs ANES Data for Hispanic Voters",
+    x = "",
+    y = "Total Votes"
+  ) +
+  scale_y_continuous(labels = scales::comma,
+                     breaks = seq(-2000000, 2000000, by = 500000),
+                     limits = c(-2000000, 2000000)) +
+  theme_bw() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5, size = 14),
+    axis.text.x = element_text(angle = 0, hjust = 0.5, size = 12),
+    axis.text.y = element_text(size = 12),
+    axis.title.y = element_text(size = 12, margin = margin(r = 10)),
+    legend.position = "none",
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_line(color = "grey", linetype = "dashed"),
+    panel.grid.minor.y = element_blank()
+  )
+
+# 3. Create data for the residual bar chart
+residual_data <- data_hispanic %>%
+  filter(Component == "Residual")
+
+# 4. Create the horizontal residual bar chart (p_residual)
+# Add labels directly on bars
+p_residual <- ggplot(residual_data, aes(x = Data_Source, y = Value, fill = Data_Source)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7)) +
+  geom_label(
+    aes(label = Data_Source, color = Data_Source),
+    fill = "white",
+    hjust = ifelse(residual_data$Value >= 0, -0.1, 1.1),
+    size = 3.5
+  ) +
+  coord_flip() +
+  scale_fill_manual(values = c("ANES" = colors[1], "PEW" = colors[6])) +
+  scale_color_manual(values = c("ANES" = colors[1], "PEW" = colors[6])) +
+  labs(
+    title = "Total Source Residuals vs True Results - All Voting Groups",
+    subtitle = "",
+    x = "",
+    y = "Residual Value"
+  ) +
+  scale_y_continuous(labels = scales::comma) +
+  theme_bw() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+    plot.subtitle = element_blank(),
+    axis.text.x = element_text(size = 10),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    axis.title.x = element_text(size = 12, margin = margin(t = 10)),
+    axis.title.y = element_blank(),
+    legend.position = "none",
+    panel.grid.major.x = element_line(color = "grey", linetype = "dashed"),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank()
+  )
+
+# 5. Combine the two plots
+plot_grid(p_main, p_residual, ncol = 1, rel_heights = c(0.7, 0.3), align = "v")
+
+ggsave("hispanic_votes_chart.png", width = 10, height = 6, dpi = 300)
+```
+
+# Analysis of 2020 Pew Data
+
+```{r}
+# Use the Pew 2020 Data
+# Calculate the 'Total Change' for LDA and RCV based on components
+data_components_2020 <- rcv_pew_16v20 %>%
+  rename(Composition = Mix,
+         Residual = Var_to_Act,
+         Demographic = Race) %>%
+  rowwise() %>%
+  mutate(Calculated_Total = sum(Rate, Composition, Volume)) %>%
+  ungroup() %>%
+  mutate(Demographic = str_to_sentence(Demographic))
+  
+
+# Calculate total components across all demographics for LDA and RCV
+total_components_2020 <- data_components_2020 %>%
+  summarise(
+    Rate = sum(Rate),
+    Composition = sum(Composition),
+    Volume = sum(Volume),
+    #Residual = sum(Residual)
+  ) %>%
+  mutate(Demographic = "Total") %>%
+  ungroup()
+
+# Bind this to the original data_components
+data_components_with_total_2020 <- bind_rows(data_components_2020, total_components_2020)
+
+# Reshape the components data for stacking
+data_long_2020 <- data_components_with_total_2020 %>% 
+  pivot_longer(
+    cols = c(Rate, Composition, Volume),
+    names_to = "Component",
+    values_to = "Value"
+  ) %>%
+  # Add a 'Type' column to distinguish between 'Component'
+  mutate(Type = "Component")
+
+# Combine the data - only using the 'data_long' for components
+final_data_2020 <- data_long_2020 %>%
+  # Order the Component for stacking (bottom to top)
+  mutate(Component = factor(Component,
+                            levels = c("Volume", "Composition", "Rate"))) %>%
+  # Order the Demographic groups, including "Total" at the end
+  mutate(Demographic = factor(Demographic,
+                              levels = c("Black", "Hispanic", "Asian", "White", "Other", "Total")))
+```
+
+```{r}
+# Create the new stacked bar chart without facets
+# Create labels only for the "Total" bar
+label_data_2020 <- final_data_2020 %>%
+  filter(Demographic == "Total")
+
+ggplot(final_data_2020, aes(x = Demographic, y = Value, fill = Component)) +
+  geom_bar(stat = "identity", position = "stack", width = 0.7) +
+  geom_text(
+    data = label_data_2020,
+    aes(label = Component),
+    position = position_stack(vjust = 0.5),
+    size = 3,
+    hjust = -0.1
+  ) +
+  scale_fill_manual(
+    values = c(
+      "Rate" = colors[2],
+      "Composition" = colors[3],
+      "Volume" = colors[4]
+    )
+  ) +
+  labs(
+    title = "RCVD Vote Change Decomposition (2016 to 2020)",
+    subtitle = "Components of Change by Demographic Group",
+    x = "Demographic Group",
+    y = "Vote Change"
+  ) +
+  scale_y_continuous(labels = scales::comma) +
+  coord_cartesian(clip = "off") +
+  theme_bw() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5, size = 14),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
+    axis.text.y = element_text(size = 10),
+    axis.title.y = element_text(size = 12, margin = margin(r = 10)),
+    legend.position = "none",
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_line(color = "grey", linetype = "dashed"),
+    panel.grid.minor.y = element_blank(),
+    plot.margin = margin(r = 50)
+  )
+
+ggsave("rcv_stacked_bar_chart_2020.png", width = 8, height = 7, dpi = 300)
+```
+
+
+# Analysis of 2024 Pew Data
+
+```{r}
+# Use the Pew 2024 Data
+# Calculate the 'Total Change' for LDA and RCV based on components
+data_components_2024 <- rcv_pew_20v24 %>%
+  rename(Composition = Mix,
+         Residual = Var_to_Act,
+         Demographic = Race) %>%
+  rowwise() %>%
+  mutate(Calculated_Total = sum(Rate, Composition, Volume)) %>%
+  ungroup() %>%
+  mutate(Demographic = str_to_sentence(Demographic))
+  
+
+# Calculate total components across all demographics for LDA and RCV
+total_components_2024 <- data_components_2024 %>%
+  summarise(
+    Rate = sum(Rate),
+    Composition = sum(Composition),
+    Volume = sum(Volume),
+    #Residual = sum(Residual)
+  ) %>%
+  mutate(Demographic = "Total") %>%
+  ungroup()
+
+# Bind this to the original data_components
+data_components_with_total_2024 <- bind_rows(data_components_2024, total_components_2024)
+
+# Reshape the components data for stacking
+data_long_2024 <- data_components_with_total_2024 %>% 
+  pivot_longer(
+    cols = c(Rate, Composition, Volume),
+    names_to = "Component",
+    values_to = "Value"
+  ) %>%
+  # Add a 'Type' column to distinguish between 'Component'
+  mutate(Type = "Component")
+
+# Combine the data - only using the 'data_long' for components
+final_data_2024 <- data_long_2024 %>%
+  # Order the Component for stacking (bottom to top)
+  mutate(Component = factor(Component,
+                            levels = c("Volume", "Composition", "Rate"))) %>%
+  # Order the Demographic groups, including "Total" at the end
+  mutate(Demographic = factor(Demographic,
+                              levels = c("Black", "Hispanic", "Asian", "White", "Other", "Total")))
+```
+
+```{r}
+# Create the new stacked bar chart without facets
+# Create labels only for the "Total" bar
+label_data_2024 <- final_data_2024 %>%
+  filter(Demographic == "Total")
+
+ggplot(final_data_2024, aes(x = Demographic, y = Value, fill = Component)) +
+  geom_bar(stat = "identity", position = "stack", width = 0.7) +
+  geom_text(
+    data = label_data_2024,
+    aes(label = Component),
+    position = position_stack(vjust = 0.5),
+    size = 3,
+    hjust = -0.1
+  ) +
+  scale_fill_manual(
+    values = c(
+      "Rate" = colors[2],
+      "Composition" = colors[3],
+      "Volume" = colors[4]
+    )
+  ) +
+  labs(
+    title = "RCVD Vote Change Decomposition (2020 to 2024)",
+    subtitle = "Components of Change by Demographic Group",
+    x = "Demographic Group",
+    y = "Vote Change"
+  ) +
+  scale_y_continuous(labels = scales::comma) +
+  coord_cartesian(clip = "off") +
+  theme_bw() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5, size = 14),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
+    axis.text.y = element_text(size = 10),
+    axis.title.y = element_text(size = 12, margin = margin(r = 10)),
+    legend.position = "none",
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_line(color = "grey", linetype = "dashed"),
+    panel.grid.minor.y = element_blank(),
+    plot.margin = margin(r = 50)
+  )
+
+ggsave("rcv_stacked_bar_chart_2024.png", width = 8, height = 7, dpi = 300)
+```
+
+
+```{r}
+# Function for a clean table
+display_clean <- function(df) {
+  # Format all numeric columns to be rounded and have commas
+  formatted_df <- df %>%
+    mutate(across(where(is.numeric), ~ comma(round(., 0))))
+
+  # Return the formatted data frame as a kable table
+  return(kable(formatted_df))
+}
+
+print(display_clean(rcv_pew_20v24))
+```
+
+
+# Analysis of 2024 vs 2016 Pew Data
+
+```{r}
+# Use the Pew 2024 Data
+# Calculate the 'Total Change' for LDA and RCV based on components
+data_components_1624 <- rcv_pew_16v24 %>%
+  rename(Composition = Mix,
+         Residual = Var_to_Act,
+         Demographic = Race) %>%
+  rowwise() %>%
+  mutate(Calculated_Total = sum(Rate, Composition, Volume)) %>%
+  ungroup() %>%
+  mutate(Demographic = str_to_sentence(Demographic))
+  
+
+# Calculate total components across all demographics for LDA and RCV
+total_components_1624 <- data_components_1624 %>%
+  summarise(
+    Rate = sum(Rate),
+    Composition = sum(Composition),
+    Volume = sum(Volume),
+    #Residual = sum(Residual)
+  ) %>%
+  mutate(Demographic = "Total") %>%
+  ungroup()
+
+# Bind this to the original data_components
+data_components_with_total_1624 <- bind_rows(data_components_1624, total_components_1624)
+
+# Reshape the components data for stacking
+data_long_1624 <- data_components_with_total_1624 %>% 
+  pivot_longer(
+    cols = c(Rate, Composition, Volume),
+    names_to = "Component",
+    values_to = "Value"
+  ) %>%
+  # Add a 'Type' column to distinguish between 'Component'
+  mutate(Type = "Component")
+
+# Combine the data - only using the 'data_long' for components
+final_data_1624 <- data_long_1624 %>%
+  # Order the Component for stacking (bottom to top)
+  mutate(Component = factor(Component,
+                            levels = c("Volume", "Composition", "Rate"))) %>%
+  # Order the Demographic groups, including "Total" at the end
+  mutate(Demographic = factor(Demographic,
+                              levels = c("Black", "Hispanic", "Asian", "White", "Other", "Total")))
+```
+
+```{r}
+# Create the new stacked bar chart without facets
+# Create labels only for the "Total" bar
+label_data_1624 <- final_data_1624 %>%
+  filter(Demographic == "Total")
+
+ggplot(final_data_1624, aes(x = Demographic, y = Value, fill = Component)) +
+  geom_bar(stat = "identity", position = "stack", width = 0.7) +
+  geom_text(
+    data = label_data_1624,
+    aes(label = Component),
+    position = position_stack(vjust = 0.5),
+    size = 3,
+    hjust = -0.1
+  ) +
+  scale_fill_manual(
+    values = c(
+      "Rate" = colors[2],
+      "Composition" = colors[3],
+      "Volume" = colors[4]
+    )
+  ) +
+  labs(
+    title = "RCVD Vote Change Decomposition (2016 to 2024)",
+    subtitle = "Components of Change by Demographic Group",
+    x = "Demographic Group",
+    y = "Vote Change"
+  ) +
+  scale_y_continuous(labels = scales::comma) +
+  coord_cartesian(clip = "off") +
+  theme_bw() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5, size = 14),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
+    axis.text.y = element_text(size = 10),
+    axis.title.y = element_text(size = 12, margin = margin(r = 10)),
+    legend.position = "none",
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_line(color = "grey", linetype = "dashed"),
+    panel.grid.minor.y = element_blank(),
+    plot.margin = margin(r = 50)
+  )
+
+ggsave("rcv_stacked_bar_chart_1624.png", width = 8, height = 7, dpi = 300)
+```
