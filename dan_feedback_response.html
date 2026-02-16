@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.57">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>dan_feedback_response</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="dan_feedback_response_files/libs/clipboard/clipboard.min.js"></script>
+<script src="dan_feedback_response_files/libs/quarto-html/quarto.js"></script>
+<script src="dan_feedback_response_files/libs/quarto-html/popper.min.js"></script>
+<script src="dan_feedback_response_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="dan_feedback_response_files/libs/quarto-html/anchor.min.js"></script>
+<link href="dan_feedback_response_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="dan_feedback_response_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="dan_feedback_response_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="dan_feedback_response_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="dan_feedback_response_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+
+
+
+<section id="comprehensive-response-to-dans-feedback" class="level1">
+<h1>COMPREHENSIVE RESPONSE TO DAN’S FEEDBACK</h1>
+<section id="how-ive-addressed-each-point" class="level2">
+<h2 class="anchored" data-anchor-id="how-ive-addressed-each-point">HOW I’VE ADDRESSED EACH POINT</h2>
+<hr>
+<section id="comment-1-introduction---state-the-actual-problem-avoid-broad-characterizations" class="level3">
+<h3 class="anchored" data-anchor-id="comment-1-introduction---state-the-actual-problem-avoid-broad-characterizations"><strong>COMMENT 1: Introduction - State the actual problem, avoid broad characterizations</strong></h3>
+<p><strong>Dan’s Feedback:</strong> &gt; “The introduction doesn’t state the actual problem that motivates your intervention, and has these broad lines about individual vs.&nbsp;group-level studies that don’t help you advance your argument and yet may well trigger reviewers who disagree with these sweeping characterizations.”</p>
+<p><strong>What I’ve Done:</strong> Addressed in Introduction - Cut broad characterizations about individual vs group-level studies - Tried to state the problem clearly and directly: interaction terms are unaccounted for in LDA, leading to misallocated votes - Tried to get to the point faster</p>
+<hr>
+</section>
+<section id="comment-2-clarify-whats-doing-the-work---interaction-terms" class="level3">
+<h3 class="anchored" data-anchor-id="comment-2-clarify-whats-doing-the-work---interaction-terms"><strong>COMMENT 2: Clarify what’s doing the work - interaction terms</strong></h3>
+<p><strong>Dan’s Feedback:</strong> &gt; “Clarify what’s really doing the work here–why does your approach differ from prior approaches? My sense is that it’s the interaction terms, no? Give readers some intuition for what the interactions represent.”</p>
+<p><strong>What I’ve Done:</strong> Addressed in Section 2 (Lines 165-199) - Added explicit substantive explanation BEFORE math: what interaction terms represent - Concrete example: Hispanic voters both growing AND shifting Republican creates multiplicative effect - Explained why LDA misses these: “By omitting these terms, the LDA implicitly assumes they are zero or trivially small” - Forward reference: “However, as I demonstrate in Section 4, these interaction terms can represent millions of votes” - Simplified Taylor series explanation to plain language about linear approximations - Made it clear: RCVD captures interactions through sequential calculation, LDA doesn’t</p>
+<hr>
+</section>
+<section id="comment-3-avoid-math-jargon-lead-with-intuition" class="level3">
+<h3 class="anchored" data-anchor-id="comment-3-avoid-math-jargon-lead-with-intuition"><strong>COMMENT 3: Avoid math jargon, lead with intuition</strong></h3>
+<p><strong>Dan’s Feedback:</strong> &gt; “You go very quickly to the math terms (derivatives, eigenvalues, Taylor series approximation, etc.)… Why not just say ‘linear transformation’ instead of eigenvalue? Lead with intuition, not math terms. The math doesn’t speak for itself.”</p>
+<p><strong>What I’ve Done:</strong> Addressed throughout Sections 2, 3, 4 - <strong>Section 2:</strong> Removed ALL “derivative” language, changed to “Linear Difference Approach” - <strong>Section 2:</strong> “eigenvalue” → “scaling factor” (line 453 in Non-Uniqueness) - <strong>Section 2:</strong> Added substantive explanations before all math - <strong>Section 3:</strong> Removed “derivative-based calculation” language - <strong>Section 3:</strong> Created simple worked example with INTUITION first, math second - Global replacement: DBA (derivative-based approach) → LDA (Linear Difference Approach) - Every technical concept now has plain-language explanation first</p>
+<hr>
+</section>
+<section id="comment-4-establish-functions-are-continuousdifferentiable-or-avoid-derivative-language" class="level3">
+<h3 class="anchored" data-anchor-id="comment-4-establish-functions-are-continuousdifferentiable-or-avoid-derivative-language"><strong>COMMENT 4: Establish functions are continuous/differentiable OR avoid derivative language</strong></h3>
+<p><strong>Dan’s Feedback:</strong> &gt; “You talk about derivatives, but I didn’t see whether they are in fact smooth, differentiable, etc. That has to be established first before you talk about their derivatives. Do Grimmer et al.&nbsp;refer to their method as derivative-based? If not, maybe emphasize change rather than derivatives.”</p>
+<p><strong>What I’ve Done:</strong> Addressed - Removed all derivative language - Changed from “derivative-based approach” to “Linear Difference Approach” (LDA) - No longer claiming to take formal derivatives - Focus on differences/changes, not derivatives - This sidesteps the continuity/differentiability question entirely</p>
+<hr>
+</section>
+<section id="comment-5-clarify-role-of-volume" class="level3">
+<h3 class="anchored" data-anchor-id="comment-5-clarify-role-of-volume"><strong>COMMENT 5: Clarify role of Volume</strong></h3>
+<p><strong>Dan’s Feedback:</strong> &gt; “What exactly is the role of volume? You have a section ‘The Problem is Not Volume’ showing errors aren’t from volume.”</p>
+<p><strong>What U’ve Done:</strong> Addressed in two ways: 1. <strong>Section 2:</strong> Clarified Volume’s role as component that ensures votes add up correctly 2. <strong>Section 3:</strong> MOVED “The Problem is Not Volume” to appendix with footnote - Footnote explains: Even with no Volume change, LDA still has 1.7M residual - This proves residual is from interaction terms, not missing Volume - Following Dan’s “fight on one front” advice - not being defensive in main text</p>
+<hr>
+</section>
+<section id="comment-6-walk-through-calculations-provide-worked-example" class="level3">
+<h3 class="anchored" data-anchor-id="comment-6-walk-through-calculations-provide-worked-example"><strong>COMMENT 6: Walk through calculations, provide worked example</strong></h3>
+<p><strong>Dan’s Feedback:</strong> &gt; “You use both methods but only present the output, so it’s hard to build intuition about why the two techniques differ. Is it possible to work through the calculations and provide more of an explanation for their differences, instead of simply saying ‘I did the math, here’s what they look like.’ Maybe derive a quantity of interest and explain how you calculated it under each approach?”</p>
+<p><strong>What I’ve Done:</strong> Addressed in Section 3 (NEW subsection, lines 242-371) - <strong>Created brand new simple worked example</strong> at start of Section 3 - Hypothetical data: 2 groups, 100→120 voters, all whole numbers - <strong>Step-by-step LDA calculation</strong> showing how it gets -0.9 vote residual - <strong>Step-by-step RCVD calculation</strong> showing how it gets 0.0 residual (exactly) - Readers can verify with a calculator - Shows EXACTLY where the approaches differ</p>
+<hr>
+</section>
+<section id="comment-7-order-of-calculation---clarify-assumptions" class="level3">
+<h3 class="anchored" data-anchor-id="comment-7-order-of-calculation---clarify-assumptions"><strong>COMMENT 7: Order of calculation - clarify assumptions</strong></h3>
+<p><strong>Dan’s Feedback:</strong> &gt; “The fact that the calculation depends on the order makes sense… are these two things linked? If so, I’d be super clear about the connections.”</p>
+<p><strong>What I’ve Done:</strong> Addressed in Section 3, Non-Uniqueness subsection (lines 438-456) - Removed “state-space is a ball” jargon - Removed “eigenvalue” language → “proportional scaling factor” - <strong>Two clear substantive justifications:</strong> 1. Rate first ensures continuity with existing literature (validates past work) 2. Volume last ensures it acts as clean proportional scaling - Concrete example: “if we shifted Composition first…the Volume effect would be confounded” - Attemped to take on a less defensive tone, more matter-of-fact</p>
+<hr>
+</section>
+<section id="comment-8-figures---walk-readers-through-make-take-home-points-clear" class="level3">
+<h3 class="anchored" data-anchor-id="comment-8-figures---walk-readers-through-make-take-home-points-clear"><strong>COMMENT 8: Figures - walk readers through, make take-home points clear</strong></h3>
+<p><strong>Dan’s Feedback:</strong> &gt; “Figures can be better than tables, but only when they clearly illustrate what you want us to take away. Walk the reader through the figures in more detail. What key take-home points do you want the reader to leave with? Consider redesigning the figure to clarify that.”</p>
+<p><strong>What I’ve Done:</strong> Addressed in Section 4 - <strong>Reviewed all 6 figures</strong> - I feel like each serves clear purpose: - Fig 1: Quantifies LDA error (365k votes) - Fig 2: Shows error relative to effects (700k error vs 1.5M composition) - Fig 3: KEY - ANES vs PEW comparison (4M vs 600k error) - Fig 4: 2016-2020 baseline - Fig 5: CORE FINDING - 2020-2024 reversal - Fig 6: 2016-2024 synthesis - Each figure caption clearly explains what to see - Text walks through what each figure shows - No redundant figures - <strong>I’d like more feedback here if I still need to cut!</strong></p>
+<hr>
+</section>
+<section id="comment-9-anes-vs-pew-analysis-doesnt-help-main-argument" class="level3">
+<h3 class="anchored" data-anchor-id="comment-9-anes-vs-pew-analysis-doesnt-help-main-argument"><strong>COMMENT 9: ANES vs PEW analysis doesn’t help main argument</strong></h3>
+<p><strong>Dan’s Feedback:</strong> &gt; “The analyses of Pew vs.&nbsp;ANES for 2020 don’t help you advance your main argument. If Pew is closer to correct, why not just use Pew? The message I took is that the survey source is what really matters–not presumably the message you want to foreground.”</p>
+<p><strong>What I’ve Done:</strong> Addressed - Streamlined by ~50% - Cut from ~22 lines to ~11 lines - Shortened methodological justification significantly - Got to the Hispanic voter finding faster - Kept key point: PEW shows Rate effect, ANES shows Composition - Shortened strategic implications - Attemped to be more focused, less digressive</p>
+<hr>
+</section>
+<section id="comment-10-show-the-method-matters-substantively" class="level3">
+<h3 class="anchored" data-anchor-id="comment-10-show-the-method-matters-substantively"><strong>COMMENT 10: Show the method matters substantively</strong></h3>
+<p><strong>Dan’s Feedback:</strong> &gt; “If you want to garner significant attention, you’ll need to show that the choice of method matters. Is it possible to find a point on which your method and the Grimmer et al.&nbsp;approach reach different substantive conclusions?”</p>
+<p><strong>What I’ve Done:</strong> Addressed throughout - <strong>Core take-home:</strong> LDA misallocates millions of votes due to interaction terms; RCVD fixes this - <strong>Section 3:</strong> Shows 1.4M residual in real 2016-2020 data - <strong>Section 4:</strong> Shows different interpretation of 2024 (Rate vs Composition decoupling) - <strong>Streamlined</strong> to focus on this one main point - Attempted to cut defensive asides and tangential arguments - Everything subordinated to: “RCVD gives accurate decomposition, LDA doesn’t”</p>
+<hr>
+</section>
+</section>
+<section id="summary-of-major-changes" class="level2">
+<h2 class="anchored" data-anchor-id="summary-of-major-changes">SUMMARY OF MAJOR CHANGES:</h2>
+<p><strong>Section 2: Literature Review &amp; RCVD Introduction</strong> - Removed derivative language throughout - Added substantive explanation of interaction terms - Changed “eigenvalue” to “scaling factor” - Explained RCVD intuition before math</p>
+<p><strong>Section 3: Proof of Concept</strong> - <strong>NEW: Simple worked example</strong> - Streamlined Two-Group Simulation (~20% shorter) - Moved “Problem is Not Volume” to appendix - Rewrote Non-Uniqueness subsection (clearer, less jargon) - All DBA → LDA globally</p>
+<p><strong>Section 4: Empirical Application</strong> - Streamlined ANES vs PEW by ~50% (Dan’s specific request) - Tightened all subsections (~30% shorter overall) - Attempted to remove overly dramatic language - All figures reviewed and justified</p>
+<p>*Conclusion** - Broke up overly long sentences - Softened overly strong claims - Attempted to be more confident, less defensive</p>
+<p>*Overall Paper** - Global DBA → LDA replacement (all 10+ instances) - Removed ALL derivative/eigenvalue jargon - Lead with intuition, not math - ~25-30% shorter overall - “Fight on one front” - focused on interaction term problem</p>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

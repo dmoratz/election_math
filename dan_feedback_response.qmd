@@ -15,7 +15,7 @@ output:
 > "The introduction doesn't state the actual problem that motivates your intervention, and has these broad lines about individual vs. group-level studies that don't help you advance your argument and yet may well trigger reviewers who disagree with these sweeping characterizations."
 
 **What I've Done:**
-**Addressed** in Introduction
+Addressed in Introduction
 - Cut broad characterizations about individual vs group-level studies
 - Tried to state the problem clearly and directly: interaction terms are unaccounted for in LDA, leading to misallocated votes
 - Tried to get to the point faster
@@ -28,7 +28,7 @@ output:
 > "Clarify what's really doing the work here--why does your approach differ from prior approaches? My sense is that it's the interaction terms, no? Give readers some intuition for what the interactions represent."
 
 **What I've Done:**
-**ADDRESSED** in Section 2 (Lines 165-199)
+Addressed in Section 2 (Lines 165-199)
 - Added explicit substantive explanation BEFORE math: what interaction terms represent
 - Concrete example: Hispanic voters both growing AND shifting Republican creates multiplicative effect
 - Explained why LDA misses these: "By omitting these terms, the LDA implicitly assumes they are zero or trivially small"
@@ -45,7 +45,7 @@ output:
 
 
 **What I've Done:**
-**ADDRESSED** throughout Sections 2, 3, 4
+Addressed throughout Sections 2, 3, 4
 - **Section 2:** Removed ALL "derivative" language, changed to "Linear Difference Approach"
 - **Section 2:** "eigenvalue" → "scaling factor" (line 453 in Non-Uniqueness)
 - **Section 2:** Added substantive explanations before all math
@@ -62,7 +62,8 @@ output:
 > "You talk about derivatives, but I didn't see whether they are in fact smooth, differentiable, etc. That has to be established first before you talk about their derivatives. Do Grimmer et al. refer to their method as derivative-based? If not, maybe emphasize change rather than derivatives."
 
 **What I've Done:**
-**ADDRESSED** - Removed all derivative language
+Addressed throughout
+- Removed all derivative language
 - Changed from "derivative-based approach" to "Linear Difference Approach" (LDA)
 - No longer claiming to take formal derivatives
 - Focus on differences/changes, not derivatives
@@ -76,7 +77,7 @@ output:
 > "What exactly is the role of volume? You have a section 'The Problem is Not Volume' showing errors aren't from volume."
 
 **What U've Done:**
-**ADDRESSED** in two ways:
+Addressed in two ways:
 1. **Section 2:** Clarified Volume's role as component that ensures votes add up correctly
 2. **Section 3:** MOVED "The Problem is Not Volume" to appendix with footnote
    - Footnote explains: Even with no Volume change, LDA still has 1.7M residual
@@ -91,7 +92,7 @@ output:
 > "You use both methods but only present the output, so it's hard to build intuition about why the two techniques differ. Is it possible to work through the calculations and provide more of an explanation for their differences, instead of simply saying 'I did the math, here's what they look like.' Maybe derive a quantity of interest and explain how you calculated it under each approach?"
 
 **What I've Done:**
-**ADDRESSED** in Section 3 (NEW subsection, lines 242-371)
+Addressed in Section 3 (NEW subsection, lines 242-371)
 - **Created brand new simple worked example** at start of Section 3
 - Hypothetical data: 2 groups, 100→120 voters, all whole numbers
 - **Step-by-step LDA calculation** showing how it gets -0.9 vote residual
@@ -107,7 +108,7 @@ output:
 > "The fact that the calculation depends on the order makes sense... are these two things linked? If so, I'd be super clear about the connections."
 
 **What I've Done:**
-**ADDRESSED** in Section 3, Non-Uniqueness subsection (lines 438-456)
+Addressed in Section 3, Non-Uniqueness subsection (lines 438-456)
 - Removed "state-space is a ball" jargon
 - Removed "eigenvalue" language → "proportional scaling factor"
 - **Two clear substantive justifications:**
@@ -124,7 +125,7 @@ output:
 > "Figures can be better than tables, but only when they clearly illustrate what you want us to take away. Walk the reader through the figures in more detail. What key take-home points do you want the reader to leave with? Consider redesigning the figure to clarify that."
 
 **What I've Done:**
-**ADDRESSED** in Section 4
+Addressed in Section 4
 - **Reviewed all 6 figures** - I feel like each serves clear purpose:
   - Fig 1: Quantifies LDA error (365k votes)
   - Fig 2: Shows error relative to effects (700k error vs 1.5M composition)
@@ -145,7 +146,8 @@ output:
 > "The analyses of Pew vs. ANES for 2020 don't help you advance your main argument. If Pew is closer to correct, why not just use Pew? The message I took is that the survey source is what really matters--not presumably the message you want to foreground."
 
 **What I've Done:**
-**ADDRESSED** - Streamlined by ~50% 
+Addressed in Section 4
+- Streamlined by ~50% 
 - Cut from ~22 lines to ~11 lines
 - Shortened methodological justification significantly
 - Got to the Hispanic voter finding faster
@@ -161,7 +163,7 @@ output:
 > "If you want to garner significant attention, you'll need to show that the choice of method matters. Is it possible to find a point on which your method and the Grimmer et al. approach reach different substantive conclusions?"
 
 **What I've Done:**
-**ADDRESSED** throughout
+Addressed throughout
 - **Core take-home:** LDA misallocates millions of votes due to interaction terms; RCVD fixes this
 - **Section 3:** Shows 1.4M residual in real 2016-2020 data
 - **Section 4:** Shows different interpretation of 2024 (Rate vs Composition decoupling)
@@ -193,12 +195,12 @@ output:
 - Attempted to remove overly dramatic language
 - All figures reviewed and justified
 
-*Conclusion**
+**Conclusion**
 - Broke up overly long sentences
 - Softened overly strong claims
 - Attempted to be more confident, less defensive
 
-*Overall Paper**
+**Overall Paper**
 - Global DBA → LDA replacement (all 10+ instances)
 - Removed ALL derivative/eigenvalue jargon
 - Lead with intuition, not math
