@@ -150,7 +150,7 @@ Other analyses have employed simpler extrapolation methods to estimate compositi
 
 The importance of accurately decomposing these effects extends to election forecasting. \citet{calvo_pitfalls_2024} demonstrate that even perfect knowledge of demographic shifts provides insufficient information to guarantee accurate forecasts, highlighting the need for methods that can cleanly separate compositional from behavioral changes. Similarly, \citet{grimmer_assessing_2024} argue that properly evaluating election forecasts requires understanding how demographic and preference shifts interact across multiple election cycles. As the discipline develops more sophisticated approaches to election forecasting, accurately decomposing the impacts of demographic shifts on election results becomes increasingly critical.
 
-Building on this work, the most comprehensive methodological framework to date for decomposing compositional and preference effects is provided by \citet{marble_measuring_2024}. Composition here can be defined as the relative size of groups within the electorate, which contrasts with Rate, which is the percent of voters within a group who support a given candidate. They reject the linearity assumption imposed by earlier regression-based approaches and adopt a non-linear specification. They argue that the difference in votes a group contributes to the election outcome can be captured by:
+Building on this work, the most comprehensive methodological framework to date for decomposing compositional and preference effects is provided by \citet{marble_measuring_2024}. Composition here can be defined as the relative size of groups within the electorate, which contrasts with Rate, which I define as the two-party vote margin within a group. For example, if 60\% of a group votes Republican and 40\% votes Democrat, the Republican margin rate is +20\% (or +0.20). They reject the linearity assumption imposed by earlier regression-based approaches and adopt a non-linear specification. They argue that the difference in votes a group contributes to the election outcome can be captured by:
 
 {\scriptsize
 \begin{align}
@@ -165,7 +165,7 @@ Where $\text{Turnout}_t(x) \text{ x } \text{Group Size}_t(x)$ can be thought of 
 
 However, the Linear Difference Approach faces two key challenges. First, it conflates Composition and Volume—that is to say, it does not distinguish between changes in the relative size of groups and changes in overall turnout. Composition can be thought of as the proportion of the total electorate comprised by each group (for example, 60 percent White, 40 percent non-White), whereas Volume is the total size of the electorate. The calculation in \citet{marble_measuring_2024} allows for changes in group size and turnout rate, but does not capture whether all groups are growing equally or whether some groups are growing faster than others. This means we cannot identify what component of change stems from a simple uniform increase in turnout—which affects total votes but not vote shares—versus differential growth across groups that shifts the compositional balance. By way of example, consider turnout in the 2008 presidential election. Turnout reached a 40-year high \citep{woolley_voter_2021}, but aggregate turnout was only part of the story. Turnout among Black voters rose by nearly 5 percent, while turnout among White voters declined by just over 1 percent \citep{lopez_dissecting_2009}. The formulation from \citet{marble_measuring_2024} would show positive turnout effects for Black voters and negative effects for White voters, but would understate the importance of these differential changes because it does not explicitly model how Black voters became a larger proportion of the overall electorate.
 
-The second—and more fundamental—challenge is that calculating Rate and Composition effects independently and then summing them fails to account for their interaction. When both voter preferences and group composition change simultaneously between elections, the total effect is not simply the sum of the two independent effects. To see why, consider a simplified case with a single group. Let $r(t)$ represent the rate at which the group votes for a candidate and $c(t)$ represent the composition (the group's share of the electorate). The total votes contributed by this group at time $t$ is simply $z(t) = r(t)c(t)$. Now consider how votes change between two elections at times $t_1$ and $t_2$. The LDA approach calculates the Rate effect by holding composition fixed at $t_1$ and allowing rate to shift: $[r(t_2) - r(t_1)]c(t_1)$. It then calculates the Composition effect by holding rate fixed at $t_1$ and allowing composition to shift: $r(t_1)[c(t_2) - c(t_1)]$. Summing these two components yields the LDA estimate of total change.
+The second—and more fundamental—challenge is that calculating Rate and Composition effects independently and then summing them fails to account for their interaction. When both voter preferences and group composition change simultaneously between elections, the total effect is not simply the sum of the two independent effects. To see why, consider a simplified case with a single group. Let $r(t)$ represent the margin rate at which the group votes for a candidate and $c(t)$ represent the composition (the group's share of the electorate). The total margin votes contributed by this group at time $t$ is simply $z(t) = r(t)c(t)$. Now consider how votes change between two elections at times $t_1$ and $t_2$. The LDA approach calculates the Rate effect by holding composition fixed at $t_1$ and allowing rate to shift: $[r(t_2) - r(t_1)]c(t_1)$. It then calculates the Composition effect by holding rate fixed at $t_1$ and allowing composition to shift: $r(t_1)[c(t_2) - c(t_1)]$. Summing these two components yields the LDA estimate of total change.
 
 However, the actual total change is $\Delta z(t) = z(t_2) - z(t_1) = r(t_2)c(t_2) - r(t_1)c(t_1)$. When we expand this expression algebraically, we find:
 
@@ -212,21 +212,23 @@ Where $r(t)$ is the Rate at which a group votes for the candidate, $c(t)$ is the
 
 I propose an alternative approach that resolves the interaction term problem through sequential calculation rather than attempting to isolate each component independently. The underlying intuition is straightforward: when both voter preferences and demographic composition change between elections, we cannot meaningfully measure the impact of composition changes while holding preferences fixed at their old values. The Rate a group votes for a candidate can be fundamentally changed by who is turning out to vote. The impact of Composition can only be measured by who comprises the new voter pool, not the individuals who composed the prior voting pool. This is particularly important if \citet{citrin_what_2003} were correct that the difference between non-voters and voters in a given election can be very different than it is in other elections. By calculating effects sequentially—first allowing preferences to shift, then composition, then overall turnout—we can decompose total change without requiring the uninterpretable interaction terms that plague the LDA.
 
-I begin by defining $z(t)$ as the total number of votes a group gives to a party or a candidate, where $t$ is defined as an election. I am interested in describing how that group's contribution to the candidate's vote total compares to their contribution in the prior period, and I want to show how that contribution is broken into Rate, Composition and Volume. Given that those are the three components I would like to explain, then $z(t)$ must be defined as a function of those three components:
+I begin by defining $z_i(t)$ as the net margin votes that group $i$ contributes to a party or candidate, where $t$ is defined as an election and $i$ indexes demographic groups (e.g., White voters, Hispanic voters). Following \citet{marble_measuring_2024}, I work with vote margins—the difference between votes for and against a candidate within each group—rather than raw vote totals for a single candidate. I am interested in describing how that group's contribution to the candidate's vote margin compares to their contribution in the prior period, and I want to show how that contribution is broken into Rate, Composition and Volume. Given that those are the three components I would like to explain, then $z_i(t)$ must be defined as a function of those three components:
 
 \begin{align}
-    z(t) &= r(t)c(t)v(t)
+    z_i(t) &= r_i(t)c_i(t)v(t)
 \end{align}
+
+Where $r_i(t)$ is the margin rate at which group $i$ votes for the candidate (the difference in vote shares between the two parties), $c_i(t)$ is the proportion of the total electorate that group $i$ comprises, and $v(t)$ is the total number of voters in the election. Note that while $r_i(t)$ and $c_i(t)$ vary across groups (indexed by $i$), $v(t)$ is constant—the total electorate size is the same for all groups.
 
 To calculate the impact of Rate, Composition, and Volume separately, I propose the following sequential decomposition:
 
 \begin{align}
-    \Delta z(t) =&  [r(t_2)-r(t_1)]c(t_1)v(t_1) \nonumber \\
-        & + r(t_2)[c(t_2)-c(t_1)]v(t_1) \\
-        & + r(t_2)c(t_2)[v(t_2)-v(t_1)] \nonumber
+    \Delta z_i(t) =&  [r_i(t_2)-r_i(t_1)]c_i(t_1)v(t_1) \nonumber \\
+        & + r_i(t_2)[c_i(t_2)-c_i(t_1)]v(t_1) \\
+        & + r_i(t_2)c_i(t_2)[v(t_2)-v(t_1)] \nonumber
 \end{align}
 
-The first term calculates the Rate effect: how many votes change when voter preferences shift from $r(t_1)$ to $r(t_2)$, holding composition and volume at their initial values. The second term calculates the Composition effect: how many votes change when the demographic makeup shifts from $c(t_1)$ to $c(t_2)$, using the new Rate $r(t_2)$ but holding volume at its initial value. The third term calculates the Volume effect: how many votes change when overall turnout shifts from $v(t_1)$ to $v(t_2)$, using the new Rate and new Composition. While initially counterintuitive, the proof that this sum equals $z(t_2)-z(t_1)$ exactly—with zero residual—is presented in the Appendix. I call this the Rate, Composition, and Volume Decomposition (RCVD).
+The first term calculates the Rate effect for group $i$: how many margin votes change when that group's preferences shift from $r_i(t_1)$ to $r_i(t_2)$, holding composition and volume at their initial values. The second term calculates the Composition effect: how many margin votes change when group $i$'s share of the electorate shifts from $c_i(t_1)$ to $c_i(t_2)$, using the new margin rate $r_i(t_2)$ but holding volume at its initial value. The third term calculates the Volume effect: how many margin votes change when overall turnout shifts from $v(t_1)$ to $v(t_2)$, using the new margin rate and new composition for group $i$. While initially counterintuitive, the proof that this sum equals $z_i(t_2)-z_i(t_1)$ exactly—with zero residual—is presented in the Appendix. I call this the Rate, Composition, and Volume Decomposition (RCVD).
 
 There are two noteworthy features of this approach. First, turnout, a fundamentally important feature of election results, affects both $c(t)$ and $v(t)$, as does population growth. To see this for $c(t)$, consider that the percentage of the total voters that a group comprises is a function of both the proportion of the population comprised of the group and the turnout rate of that group. For $v(t)$, a similar challenge exists—an increase in the total number of potential voters in a group (population size) and the total number of realized voters (turnout) both affect the final total size of the voting population. While a decomposition of the formula into the component parts of turnout and population change is achievable, I argue it is not necessary for the purposes of this paper for two main reasons. First, across the simple case of two time periods only four years apart, underlying changes in the racial composition of the potential electorate are unlikely to be meaningful, at least compared to the impact of turnout. Second, turnout changes are only interesting insofar as they are differential. If all groups increase turnout at the same rate (thus preserving the relative group sizes), then there are no Compositional effects. With this specification, any changes that are universal (overall population growth, increased turnout across all groups) are captured in Volume, while any changes that are differential are captured in Composition.
 
@@ -242,70 +244,71 @@ A second crucial feature is that this sequence is not unique. The calculation ca
 This section moves from theoretical framework to empirical application. The previous section introduced the mathematical structure of RCVD and explained why sequential calculation resolves the interaction term problem that affects the Linear Difference Approach. Here, I demonstrate how these approaches perform in practice. I begin with a simple worked example using hypothetical data to illustrate exactly how the LDA generates a residual while RCVD achieves zero error. I then apply both methods to increasingly complex scenarios: first, a two-group analysis of the 2016-2020 election showing the magnitude of the LDA's residual in real data; second, a controlled scenario isolating the Rate-Composition interaction by holding Volume constant; and finally, a justification for the Rate → Composition → Volume calculation sequence based on theoretical interpretability.
 
 
+# FINAL MARGIN-BASED WORKED EXAMPLE
+
+## Complete text with tables:
+
 \subsection*{A Simple Worked Example}
 
-To see precisely how the LDA generates a residual while RCVD does not, consider a straightforward hypothetical scenario with two voter groups across two elections. Table~\ref{tab:worked_example_data} presents the data, using round numbers throughout to allow readers to verify each calculation step.
+To see precisely how the LDA generates a residual while RCVD does not, consider a straightforward hypothetical scenario with two voter groups across two elections. Following \citet{marble_measuring_2024}, we work with vote margins—the difference between votes for Candidate X and votes for Candidate Y within each group. Table~\ref{tab:worked_example_data} presents the data, using round numbers throughout to allow readers to verify each calculation step.
 
 \begin{table}[H]
 \centering
 \caption{Hypothetical Two-Group Election Data}
-\begin{tabular}{lcccccc}
+\begin{tabular}{lcccccccc}
 \toprule
-& \multicolumn{3}{c}{Election 1} & \multicolumn{3}{c}{Election 2} \\
-\cmidrule(lr){2-4} \cmidrule(lr){5-7}
-& Voters & \% of Total & Rate & Voters & \% of Total & Rate \\
+& \multicolumn{4}{c}{Election 1} & \multicolumn{4}{c}{Election 2} \\
+\cmidrule(lr){2-5} \cmidrule(lr){6-9}
+& Voters & \% of Total & Margin & Margin Rate & Voters & \% of Total & Margin & Margin Rate \\
 \midrule
-Group A & 30 & 30\% & 60\% & 40 & 33.3\% & 45\% \\
-Group B & 70 & 70\% & 40\% & 80 & 66.7\% & 45\% \\
+Group A & 30 & 30\% & +6 & +20\% & 40 & 33.3\% & -4 & -10\% \\
+Group B & 70 & 70\% & -14 & -20\% & 80 & 66.7\% & -8 & -10\% \\
 \midrule
-\textbf{Total} & \textbf{100} & \textbf{100\%} & -- & \textbf{120} & \textbf{100\%} & -- \\
-\midrule
-\multicolumn{7}{l}{\textit{Votes for Candidate X:}} \\
-~~Group A & \multicolumn{3}{c}{18 votes} & \multicolumn{3}{c}{18 votes} \\
-~~Group B & \multicolumn{3}{c}{28 votes} & \multicolumn{3}{c}{36 votes} \\
-~~\textbf{Total} & \multicolumn{3}{c}{\textbf{46 votes}} & \multicolumn{3}{c}{\textbf{54 votes}} \\
+\textbf{Total} & \textbf{100} & \textbf{100\%} & \textbf{-8} & -- & \textbf{120} & \textbf{100\%} & \textbf{-12} & -- \\
 \bottomrule
+\multicolumn{9}{l}{\footnotesize Note: Margin = (Votes for X - Votes for Y). Margin Rate = Margin/Total Voters.} \\
+\multicolumn{9}{l}{\footnotesize Election 1 Group A: 18 votes for X, 12 for Y → Margin = +6 (20\% margin rate)}
 \end{tabular}
 \label{tab:worked_example_data}
 \end{table}
 
-\textbf{Total change to explain: 54 - 46 = 8 votes}
-
-Table~\ref{tab:worked_example_decomp} shows how the LDA and RCVD decompose this 8-vote change. Both methods calculate the same Rate effect (-1.0 votes), but they diverge in the Composition and Volume calculations.
+In Election 1, Group A favors Candidate X (18 votes for X versus 12 for Y, yielding a +6 vote margin and a +20\% margin rate), while Group B favors Candidate Y (28 votes for X versus 42 for Y, yielding a -14 vote margin and a -20\% margin rate). The total margin across both groups is -8 votes, meaning Candidate Y leads by 8 votes overall. By Election 2, both groups shift toward Candidate Y. Group A now opposes X (18 votes for X versus 22 for Y, yielding a -4 vote margin and a -10\% margin rate), and Group B continues opposing X but less strongly (36 votes for X versus 44 for Y, yielding an -8 vote margin and a -10\% margin rate). The total margin is now -12 votes, meaning Candidate X's margin declined by 4 votes between the two elections. This change resulted from three factors: shifts in margin rates within groups (Rate), changes in group sizes (Composition), and an increase in overall turnout (Volume). Table~\ref{tab:worked_example_decomp} shows how the LDA and RCVD decompose this 4-vote margin change.
 
 \begin{table}[H]
 \centering
-\caption{LDA vs RCVD Decomposition of 8-Vote Change}
+\caption{LDA vs RCVD Decomposition of 4-Vote Margin Change}
 \begin{tabular}{lcc}
 \toprule
 \textbf{Component} & \textbf{LDA Calculation} & \textbf{RCVD Calculation} \\
 \midrule
 \multicolumn{3}{l}{\textit{Rate Effect:}} \\
-~~Group A & $(-0.15) \times 30 = -4.5$ & $(-0.15) \times 30 = -4.5$ \\
-~~Group B & $(+0.05) \times 70 = +3.5$ & $(+0.05) \times 70 = +3.5$ \\
-~~\textbf{Total} & \textbf{-1.0 votes} & \textbf{-1.0 votes} \\
+~~Group A & $(-0.30) \times 0.30 \times 100 = -9.0$ & $(-0.30) \times 0.30 \times 100 = -9.0$ \\
+~~Group B & $(+0.10) \times 0.70 \times 100 = +7.0$ & $(+0.10) \times 0.70 \times 100 = +7.0$ \\
+~~\textbf{Total} & \textbf{-2.0 votes} & \textbf{-2.0 votes} \\
 \addlinespace
 \multicolumn{3}{l}{\textit{Composition Effect:}} \\
-~~Group A & $(+0.033) \times 100 \times 0.60 = +2.0$ & $0.45 \times \frac{40}{120} \times 100 = 15$ \\
-~~Group B & $(-0.033) \times 100 \times 0.40 = -1.3$ & $0.45 \times \frac{80}{120} \times 100 = 30$ \\
-~~\textbf{Total} & \textbf{+0.7 votes} & \textbf{0.0 votes} \\
+~~Group A & $(+0.20) \times (+0.033) \times 100 = +0.667$ & $(-0.10) \times (+0.033) \times 100 = -0.333$ \\
+~~Group B & $(-0.20) \times (-0.033) \times 100 = +0.667$ & $(-0.10) \times (-0.033) \times 100 = +0.333$ \\
+~~\textbf{Total} & \textbf{+1.333 votes} & \textbf{0.0 votes} \\
 \addlinespace
 \multicolumn{3}{l}{\textit{Volume Effect:}} \\
-~~Group A & $0.30 \times 20 \times 0.60 = +3.6$ & $0.45 \times \frac{40}{120} \times 120 = 18$ \\
-~~Group B & $0.70 \times 20 \times 0.40 = +5.6$ & $0.45 \times \frac{80}{120} \times 120 = 36$ \\
-~~\textbf{Total} & \textbf{+9.2 votes} & \textbf{+9.0 votes} \\
+~~Group A & $(+0.20) \times 0.30 \times 20 = +1.2$ & $(-0.10) \times 0.333 \times 20 = -0.667$ \\
+~~Group B & $(-0.20) \times 0.70 \times 20 = -2.8$ & $(-0.10) \times 0.667 \times 20 = -1.333$ \\
+~~\textbf{Total} & \textbf{-1.6 votes} & \textbf{-2.0 votes} \\
 \midrule
-\textbf{Sum of Components} & \textbf{8.9 votes} & \textbf{8.0 votes} \\
-\textbf{Actual Change} & \textbf{8.0 votes} & \textbf{8.0 votes} \\
+\textbf{Sum of Components} & \textbf{-2.267 votes} & \textbf{-4.0 votes} \\
+\textbf{Actual Change} & \textbf{-4.0 votes} & \textbf{-4.0 votes} \\
 \midrule
-\textbf{Residual Error} & \textbf{-0.9 votes} & \textbf{0.0 votes} \\
+\textbf{Residual Error} & \textbf{-1.733 votes} & \textbf{0.0 votes} \\
 \bottomrule
-\multicolumn{3}{l}{\footnotesize RCVD running totals: 45 votes after Rate, 45 after Composition, 54 after Volume}
+\multicolumn{3}{l}{\footnotesize RCVD running totals: -10 votes after Rate, -10 after Composition, -12 after Volume}
 \end{tabular}
 \label{tab:worked_example_decomp}
 \end{table}
 
-The LDA holds all components at Election 1 values when calculating each effect independently, producing a Composition effect of +0.7 votes and a Volume effect of +9.2 votes. When summed, these components total 8.9 votes, leaving a -0.9 vote residual. In contrast, RCVD calculates each component sequentially, using updated values at each step. After the Rate effect reduces votes from 46 to 45, the Composition calculation uses the \textit{new} rates (45\% for both groups) rather than the old rates. Because both groups have identical rates in Election 2, the compositional shift from 30\%/70\% to 33.3\%/66.7\% produces zero net effect. The Volume effect then scales from 100 to 120 voters using both the new rates and new composition, adding 9.0 votes. The RCVD components sum exactly to 8.0 votes with zero residual.
+Both methods calculate the same Rate effect (-2.0 votes), but they diverge in the Composition and Volume calculations. The LDA holds all components at Election 1 values when calculating each effect independently. For the Composition effect, it applies Election 1's margin rates (+20\% for Group A, -20\% for Group B) to the compositional shift (+3.3 percentage points for Group A, -3.3 for Group B), producing a +1.333 vote effect. For the Volume effect, it applies Election 1's margin rates and composition to the 20-voter increase, producing a -1.6 vote effect. When summed, these components total -2.267 votes, leaving a -1.733 vote residual.
+
+In contrast, RCVD calculates each component sequentially, using updated values at each step. After the Rate effect reduces the margin from -8 to -10 votes, the Composition calculation uses the \textit{new} margin rates (-10\% for both groups) rather than the old rates. Because both groups have identical margin rates in Election 2, the compositional shift from 30\%/70\% to 33.3\%/66.7\% produces zero net effect—moving voters between two groups that vote identically has no impact on the overall margin. The Volume effect then scales from 100 to 120 voters using both the new margin rates and new composition, reducing the margin by an additional 2.0 votes (from -10 to -12). The RCVD components sum exactly to -4.0 votes with zero residual.
 
 This simple example demonstrates why RCVD is necessary: even with straightforward data and small changes, the LDA generates residuals because it cannot properly account for how changes in Rate, Composition, and Volume interact. In real elections with larger shifts and more groups, these residuals grow substantially, as the following sections demonstrate.
 
@@ -401,7 +404,7 @@ The analysis proceeds in three parts. First, I apply RCVD to the 2020 election u
 
 \subsection*{The 2020 Baseline: Compositional Effects in the ANES}
 
-Political analysis of the 2020 presidential election typically relies on changes in two-party vote share within demographic groups. However, a change in a group's aggregate vote margin may result from a shift in partisan preference (Rate), a change in that group's share of the electorate (Composition), or overall turnout changes (Volume). Standard decomposition methods fail to separate these effects cleanly, hindering our understanding of what drove the election outcome.
+Political analysis of the 2020 presidential election typically relies on changes in two-party vote margins within demographic groups.\footnote{Following \citet{marble_measuring_2024}, I work with two-party vote margins throughout this analysis. A margin represents the difference in vote shares between parties: for example, if Democrats receive 72\% and Republicans 28\% of a group's votes, the Democratic margin is +44 percentage points. While I report some results in terms of vote shares for interpretability, the RCVD framework decomposes margin changes.} However, a change in a group's aggregate vote margin may result from a shift in partisan preference (Rate), a change in that group's share of the electorate (Composition), or overall turnout changes (Volume). Standard decomposition methods fail to separate these effects cleanly, hindering our understanding of what drove the election outcome.
 
 I begin by applying the RCVD framework to data from the 2020 American National Election Studies (ANES), which represents the discipline's historical ``gold standard.'' While ANES has limitations in describing recent election outcomes (discussed in the next subsection), it provides a useful starting point for demonstrating RCVD's value.
 
@@ -452,11 +455,11 @@ I now apply the RCVD framework to analyze vote change across three electoral cyc
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\columnwidth]{figures/rcv_stacked_bar_chart_2020.png}
-    \caption{This figure provides an evaluation of the 2020 election compared to the 2016 election using PEW data and the RCVD approach. It shows that Composition had a large positive impact for Democrats as a result of shifting out of White voters and into Black and Asian voters. There was also a large positive impact for Democrats driven by an increase in White support. However, this impact was almost entirely offset by a loss of support amongst Hispanic voters, and to a lesser extent amongst Black, Asian and other voters.}
+    \caption{This figure provides an evaluation of the 2020 election compared to the 2016 election using PEW data and the RCVD approach. It shows that Composition had a large positive impact for Democrats as a result of shifting out of White voters and into Black and Asian voters. There was also a large positive impact for Democrats driven by improved margins among White voters. However, this impact was almost entirely offset by declining Democratic margins among Hispanic voters, and to a lesser extent among Black, Asian and other voters.}
     \label{fig:2020_vs_2016}
 \end{figure}
 
-The 2016 to 2020 period represents the Democratic bounce-back from their 2016 loss. While accounting for the translation of the popular vote to the Electoral College involves challenges \citep{grimmer_assessing_2024}, Democrats clearly performed better in 2020. The victory was characterized by favorable Compositional forces (increasing share of non-White voters, particularly Black and Asian voters) combined with positive Rate effects among White voters. The RCVD decomposition confirms that mobilization efforts and demographic trends worked synergistically with preference shifts to yield a substantial Democratic gain. This period represents the high-water mark of the conventional wisdom that demographic change inherently favors Democrats. However, even in 2020, warning signs appeared: all non-White groups voted for Democrats at lower rates, with Democratic support among Hispanic voters declining noticeably (from 72\% to 61\%).
+The 2016 to 2020 period represents the Democratic bounce-back from their 2016 loss. While accounting for the translation of the popular vote to the Electoral College involves challenges \citep{grimmer_assessing_2024}, Democrats clearly performed better in 2020. The victory was characterized by favorable Compositional forces (increasing share of non-White voters, particularly Black and Asian voters) combined with positive Rate effects among White voters. The RCVD decomposition confirms that mobilization efforts and demographic trends worked synergistically with preference shifts to yield a substantial Democratic gain. This period represents the high-water mark of the conventional wisdom that demographic change inherently favors Democrats. However, even in 2020, warning signs appeared: all non-White groups voted for Democrats at lower rates, with Democratic vote share among Hispanic voters declining noticeably (from 72\% to 61\%, a margin shift from +44\% to +22\%).
 
 \subsubsection*{The Critical 2020 to 2024 Swing- Figure~\ref{fig:2024_vs_2020}}
 
@@ -465,7 +468,7 @@ The 2020 to 2024 period represents a critical realignment that challenges establ
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\columnwidth]{figures/rcv_stacked_bar_chart_2024.png}
-    \caption{This figure provides an analysis of the 2024 election compared to the 2020 election. It shows that Democrats suffered a dramatic decrease in support amongst all non-White voting groups, most prominently amongst Hispanic voters. The decline in support was so significant that even with continued shifts away from White voters amongst the Composition of the electorate, the total impact of Composition in 2024 was a net negative for Democrats.}
+    \caption{This figure provides an analysis of the 2024 election compared to the 2020 election. It shows that Democrats suffered a dramatic decrease in vote margins among all non-White voting groups, most prominently among Hispanic voters. The decline in support was so significant that even with continued shifts away from White voters amongst the Composition of the electorate, the total impact of Composition in 2024 was a net negative for Democrats.}
     \label{fig:2024_vs_2020}
 \end{figure}
 
@@ -478,7 +481,7 @@ The eight-year view from 2016 to 2024 provides the final synthesis. While the an
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\columnwidth]{figures/rcv_stacked_bar_chart_1624.png}
-    \caption{This figure compares the 2024 election to the 2016 election. It highlights the strong negative trend in support amongst Hispanic voters, and to a lesser extent amongst other non-White voters. While this analysis demonstrates some favorable impacts from Composition, it highlights the shortcomings of a reliance on these demographic shifts to promote future success for the Democratic party.}
+    \caption{This figure compares the 2024 election to the 2016 election. It highlights the strong negative trend in Democratic vote margins among Hispanic voters, and to a lesser extent among other non-White voters. While this analysis demonstrates some favorable impacts from Composition, it highlights the shortcomings of a reliance on these demographic shifts to promote future success for the Democratic party.}
     \label{fig:2024_vs_2016}
 \end{figure}
 
