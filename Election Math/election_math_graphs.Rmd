@@ -199,8 +199,8 @@ ggsave("fo_taylor.png", width = 10, height = 6, dpi = 300)
 data <- data.frame(
   Demographic = c("Non-White", "Non-White",
                   "White", "White"),
-  Calculation_Method = c("RCVD", "Traditional",
-                         "RCVD", "Traditional"),
+  Calculation_Method = c("RCVD", "LDA",
+                         "RCVD", "LDA"),
   Value = c(rcv_simple_sim$Mix[1], derivative_simple_sim$Mix[1],
             rcv_simple_sim$Mix[2], derivative_simple_sim$Mix[2])
 )
@@ -214,10 +214,10 @@ data$Demographic <- factor(data$Demographic,
 # 2. Create the grouped bar chart using ggplot2
 ggplot(data, aes(x = Demographic, y = Value, fill = Calculation_Method)) +
   geom_bar(stat = "identity", position = position_dodge(width = 0.75), width = 0.7) +
-  scale_fill_manual(values = c("RCVD" = colors[1], "Traditional" = colors[6])) + # Custom colors
+  scale_fill_manual(values = c("RCVD" = colors[1], "LDA" = colors[6])) + # Custom colors
   labs(
     title = "Impact of Composition on Simulated 2020 Election",
-    subtitle = "Comparing RCVD vs Traditional Calculation",
+    subtitle = "Comparing RCVD vs LDA Calculation",
     x = "", 
     y = "Total Votes"
   ) +
@@ -250,7 +250,7 @@ ggsave("simple_sim_mix_chart.png", width = 10, height = 6, dpi = 300)
 # You will need to replace these with your actual numbers.
 data_components <- data.frame(
   Demographic = rep(c("Non-White", "White"), each = 2),
-  Calculation_Method = rep(c("Traditional", "RCVD"), times = 2),
+  Calculation_Method = rep(c("LDA", "RCVD"), times = 2),
   Rate = c(
     # Non-White
     derivative_simple_sim$Rate[1], rcv_simple_sim$Rate[1],
@@ -270,20 +270,20 @@ data_components <- data.frame(
     derivative_simple_sim$Volume[2], rcv_simple_sim$Volume[2]
   ),
   Residual = c(
-    # Non-White (Traditional has residual, RCV has 0)
+    # Non-White (LDA has residual, RCV has 0)
     derivative_simple_sim$Var_to_Act[1], rcv_simple_sim$Var_to_Act[1],
     # White
     derivative_simple_sim$Var_to_Act[2], rcv_simple_sim$Var_to_Act[2]
   )
 )
 
-# Calculate the 'Total Change' for Traditional and RCV based on components
+# Calculate the 'Total Change' for LDA and RCV based on components
 data_components <- data_components %>%
   rowwise() %>%
   mutate(Calculated_Total = sum(Rate, Composition, Volume, Residual)) %>%
   ungroup()
 
-# Calculate total components across all demographics for Traditional and RCV
+# Calculate total components across all demographics for LDA and RCV
 total_components <- data_components %>%
   group_by(Calculation_Method) %>%
   summarise(
@@ -312,7 +312,7 @@ data_long <- data_components_with_total %>% # Use the combined data
 final_data_simple <- data_long %>%
   # Order the Calculation_Method for plotting
   mutate(Calculation_Method = factor(Calculation_Method,
-                                     levels = c("Traditional", "RCVD"))) %>%
+                                     levels = c("LDA", "RCVD"))) %>%
   # Order the Component for stacking (bottom to top)
   mutate(Component = factor(Component,
                             levels = c("Residual", "Volume", "Composition", "Rate"))) %>%
@@ -337,7 +337,7 @@ ggplot(final_data_simple, aes(x = Calculation_Method, y = Value, fill = Componen
   ) +
   labs(
     title = "2016 vs 2020 Simple Data",
-    subtitle = "Comparing Traditional vs RCVD Approach",
+    subtitle = "Comparing LDA vs RCVD Approach",
     x = "", # X-axis label handled by facets and subheaders
     y = "Vote Change for Democratic Candidate"
   ) +
@@ -393,20 +393,20 @@ data_components <- data.frame(
     rcv_simple_sim$Volume[2], rcv_simple_sim_alt$Volume[2]
   ),
   Residual = c(
-    # Non-White (Traditional has residual, RCV has 0)
+    # Non-White (LDA has residual, RCV has 0)
     rcv_simple_sim$Var_to_Act[1], rcv_simple_sim_alt$Var_to_Act[1],
     # White
     rcv_simple_sim$Var_to_Act[2], rcv_simple_sim_alt$Var_to_Act[2]
   )
 )
 
-# Calculate the 'Total Change' for Traditional and RCV based on components
+# Calculate the 'Total Change' for LDA and RCV based on components
 data_components <- data_components %>%
   rowwise() %>%
   mutate(Calculated_Total = sum(Rate, Composition, Volume, Residual)) %>%
   ungroup()
 
-# Calculate total components across all demographics for Traditional and RCV
+# Calculate total components across all demographics for LDA and RCV
 total_components <- data_components %>%
   group_by(Calculation_Method) %>%
   summarise(
@@ -497,7 +497,7 @@ ggsave("simple_sim_alt_chart.png", width = 12, height = 7, dpi = 300)
 # You will need to replace these with your actual numbers.
 data_components <- data.frame(
   Demographic = rep(c("Black", "Hispanic", "Other", "White", "Unknown"), each = 2),
-  Calculation_Method = rep(c("Traditional", "RCVD"), times = 5),
+  Calculation_Method = rep(c("LDA", "RCVD"), times = 5),
   Rate = c(
     # Black
     derivative_rate_mix$Rate[1], rcv_rate_mix$Rate[1],
@@ -535,7 +535,7 @@ data_components <- data.frame(
     derivative_rate_mix$Volume[5], rcv_rate_mix$Volume[5]
   ),
   Residual = c(
-    # Black (Traditional has residual, RCV has 0)
+    # Black (LDA has residual, RCV has 0)
     derivative_rate_mix$Var_to_Act[1], rcv_rate_mix$Var_to_Act[1],
     # Hispanic
     derivative_rate_mix$Var_to_Act[2], rcv_rate_mix$Var_to_Act[2],
@@ -548,13 +548,13 @@ data_components <- data.frame(
   )
 )
 
-# Calculate the 'Total Change' for Traditional and RCV based on components
+# Calculate the 'Total Change' for LDA and RCV based on components
 data_components <- data_components %>%
   rowwise() %>%
   mutate(Calculated_Total = sum(Rate, Composition, Volume, Residual)) %>%
   ungroup()
 
-# Calculate total components across all demographics for Traditional and RCV
+# Calculate total components across all demographics for LDA and RCV
 total_components <- data_components %>%
   group_by(Calculation_Method) %>%
   summarise(
@@ -583,7 +583,7 @@ data_long <- data_components_with_total %>% # Use the combined data
 final_data_rate_mix <- data_long %>%
   # Order the Calculation_Method for plotting
   mutate(Calculation_Method = factor(Calculation_Method,
-                                     levels = c("Traditional", "RCVD"))) %>%
+                                     levels = c("LDA", "RCVD"))) %>%
   # Order the Component for stacking (bottom to top)
   mutate(Component = factor(Component,
                             levels = c("Residual", "Volume", "Composition", "Rate"))) %>%
@@ -608,7 +608,7 @@ ggplot(final_data_rate_mix, aes(x = Calculation_Method, y = Value, fill = Compon
   ) +
   labs(
     title = "2020 vs 2020 Hypothetical Vote Change Decomposition",
-    subtitle = "Comparing Traditional vs RCVD Components",
+    subtitle = "Comparing LDA vs RCVD Components",
     x = "", # X-axis label handled by facets and subheaders
     y = "Vote Change for Democratic Candidate"
   ) +
@@ -649,11 +649,11 @@ data <- data.frame(
                   "Other", "Other",
                   "White", "White",
                   "Unknown", "Unknown"),
-  Calculation_Method = c("RCVD", "Traditional",
-                         "RCVD", "Traditional",
-                         "RCVD", "Traditional",
-                         "RCVD", "Traditional",
-                         "RCVD", "Traditional"),
+  Calculation_Method = c("RCVD", "LDA",
+                         "RCVD", "LDA",
+                         "RCVD", "LDA",
+                         "RCVD", "LDA",
+                         "RCVD", "LDA"),
   Value = c(rcv_grimmer$Mix[1], derivative_grimmer$Mix[1],    # Black
             rcv_grimmer$Mix[2], derivative_grimmer$Mix[2],    # Hispanic
             rcv_grimmer$Mix[3], derivative_grimmer$Mix[3],    # Other
@@ -670,10 +670,10 @@ data$Demographic <- factor(data$Demographic,
 # 2. Create the grouped bar chart using ggplot2
 ggplot(data, aes(x = Demographic, y = Value, fill = Calculation_Method)) +
   geom_bar(stat = "identity", position = position_dodge(width = 0.75), width = 0.7) +
-  scale_fill_manual(values = c("RCVD" = colors[1], "Traditional" = colors[6])) + # Custom colors
+  scale_fill_manual(values = c("RCVD" = colors[1], "LDA" = colors[6])) + # Custom colors
   labs(
     title = "Impact of Composition on 2020 Election",
-    subtitle = "Comparing RCV vs Traditional Calculation",
+    subtitle = "Comparing RCV vs LDA Calculation",
     x = "", 
     y = "Total Votes"
   ) +
@@ -706,7 +706,7 @@ ggsave("election_impact_chart.png", width = 10, height = 6, dpi = 300)
 # You will need to replace these with your actual numbers.
 data_components <- data.frame(
   Demographic = rep(c("Black", "Hispanic", "Other", "White", "Unknown"), each = 2),
-  Calculation_Method = rep(c("Traditional", "RCVD"), times = 5),
+  Calculation_Method = rep(c("LDA", "RCVD"), times = 5),
   Rate = c(
     # Black
     derivative_grimmer$Rate[1], rcv_grimmer$Rate[1],
@@ -744,7 +744,7 @@ data_components <- data.frame(
     derivative_grimmer$Volume[5], rcv_grimmer$Volume[5]
   ),
   Residual = c(
-    # Black (Traditional has residual, RCV has 0)
+    # Black (LDA has residual, RCV has 0)
     derivative_grimmer$Var_to_Act[1], rcv_grimmer$Var_to_Act[1],
     # Hispanic
     derivative_grimmer$Var_to_Act[2], rcv_grimmer$Var_to_Act[2],
@@ -757,13 +757,13 @@ data_components <- data.frame(
   )
 )
 
-# Calculate the 'Total Change' for Traditional and RCV based on components
+# Calculate the 'Total Change' for LDA and RCV based on components
 data_components <- data_components %>%
   rowwise() %>%
   mutate(Calculated_Total = sum(Rate, Composition, Volume, Residual)) %>%
   ungroup()
 
-# Calculate total components across all demographics for Traditional and RCV
+# Calculate total components across all demographics for LDA and RCV
 total_components <- data_components %>%
   group_by(Calculation_Method) %>%
   summarise(
@@ -792,7 +792,7 @@ data_long <- data_components_with_total %>% # Use the combined data
 final_data_full <- data_long %>%
   # Order the Calculation_Method for plotting
   mutate(Calculation_Method = factor(Calculation_Method,
-                                     levels = c("Traditional", "RCVD"))) %>%
+                                     levels = c("LDA", "RCVD"))) %>%
   # Order the Component for stacking (bottom to top)
   mutate(Component = factor(Component,
                             levels = c("Residual", "Volume", "Composition", "Rate"))) %>%
@@ -817,7 +817,7 @@ ggplot(final_data_full, aes(x = Calculation_Method, y = Value, fill = Component)
   ) +
   labs(
     title = "2016 to 2020 Vote Change Decomposition",
-    subtitle = "Comparing Traditional vs RCVD Components",
+    subtitle = "Comparing LDA vs RCVD Components",
     x = "", # X-axis label handled by facets and subheaders
     y = "Vote Change for Democratic Candidate"
   ) +
@@ -947,7 +947,7 @@ ggsave("hispanic_votes_chart.png", width = 10, height = 6, dpi = 300)
 
 ```{r}
 # Use the Pew 2020 Data
-# Calculate the 'Total Change' for Traditional and RCV based on components
+# Calculate the 'Total Change' for LDA and RCV based on components
 data_components_2020 <- rcv_pew_16v20 %>%
   rename(Composition = Mix,
          Residual = Var_to_Act,
@@ -958,7 +958,7 @@ data_components_2020 <- rcv_pew_16v20 %>%
   mutate(Demographic = str_to_sentence(Demographic))
   
 
-# Calculate total components across all demographics for Traditional and RCV
+# Calculate total components across all demographics for LDA and RCV
 total_components_2020 <- data_components_2020 %>%
   summarise(
     Rate = sum(Rate),
@@ -1036,7 +1036,7 @@ ggsave("rcv_stacked_bar_chart_2020.png", width = 8, height = 7, dpi = 300)
 
 ```{r}
 # Use the Pew 2024 Data
-# Calculate the 'Total Change' for Traditional and RCV based on components
+# Calculate the 'Total Change' for LDA and RCV based on components
 data_components_2024 <- rcv_pew_20v24 %>%
   rename(Composition = Mix,
          Residual = Var_to_Act,
@@ -1047,7 +1047,7 @@ data_components_2024 <- rcv_pew_20v24 %>%
   mutate(Demographic = str_to_sentence(Demographic))
   
 
-# Calculate total components across all demographics for Traditional and RCV
+# Calculate total components across all demographics for LDA and RCV
 total_components_2024 <- data_components_2024 %>%
   summarise(
     Rate = sum(Rate),
@@ -1140,7 +1140,7 @@ print(display_clean(rcv_pew_20v24))
 
 ```{r}
 # Use the Pew 2024 Data
-# Calculate the 'Total Change' for Traditional and RCV based on components
+# Calculate the 'Total Change' for LDA and RCV based on components
 data_components_1624 <- rcv_pew_16v24 %>%
   rename(Composition = Mix,
          Residual = Var_to_Act,
@@ -1151,7 +1151,7 @@ data_components_1624 <- rcv_pew_16v24 %>%
   mutate(Demographic = str_to_sentence(Demographic))
   
 
-# Calculate total components across all demographics for Traditional and RCV
+# Calculate total components across all demographics for LDA and RCV
 total_components_1624 <- data_components_1624 %>%
   summarise(
     Rate = sum(Rate),
