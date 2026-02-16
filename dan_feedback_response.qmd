@@ -1,7 +1,8 @@
 ---
-output:
-  pdf_document: default
-  html_document: default
+title: Response to Dan's Feedback
+format:
+  pdf:
+    toc: false
 ---
 # COMPREHENSIVE RESPONSE TO DAN'S FEEDBACK
 
