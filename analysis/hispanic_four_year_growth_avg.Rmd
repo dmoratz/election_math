@@ -1,0 +1,50 @@
+---
+title: "Untitled"
+output: html_document
+date: "2026-03-26"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(tidycensus)
+
+source("C:/Users/skybl/Dropbox/My PC (LAPTOP-IKUHQKMA)/Documents/GitHub/PSCI-1800-Teaching-Materials/DM Census API Key.R")
+
+```
+
+```{r}
+
+
+# ACS 1-year estimates: Hispanic/Latino % of US population
+# B03003_001 = Total population, B03003_003 = Hispanic or Latino
+# Note: 2020 ACS 1-year was not released (COVID), 2025 not available via ACS
+
+years <- c(2010:2019, 2021:2024)  # try 2024; drop it if it errors
+
+hisp_pct <- map_dfr(years, function(yr) {
+  message("Pulling ", yr, "...")
+  tryCatch({
+    get_acs(
+      geography = "us",
+      variables = c(total = "B03003_001", hispanic = "B03003_003"),
+      survey = "acs1",
+      year = yr
+    ) %>%
+      select(variable, estimate) %>%
+      pivot_wider(names_from = variable, values_from = estimate) %>%
+      mutate(
+        year = yr,
+        pct_hispanic = hispanic / total * 100
+      )
+  }, error = function(e) {
+    message("  Skipped ", yr, ": ", e$message)
+    return(NULL)
+  })
+})
+
+four_year_growth_avg <- (hisp_pct$pct_hispanic[nrow(hisp_pct)]-hisp_pct$pct_hispanic[1])/14*4
+
+four_year_growth_avg
+```
+
